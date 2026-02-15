@@ -1,4 +1,5 @@
 import { load } from 'cheerio';
+import { normalizeAtCoderMathInHtml } from '../../shared/mathNotation';
 import type { FetchProblemDetailParams, ProblemDetail, ProblemSample, ProblemSection } from '../../shared/types/problem';
 import { readCache, writeCache } from './cacheService';
 
@@ -53,7 +54,8 @@ function parseProblemHtml(html: string, params: FetchProblemDetailParams): Probl
     const sectionClone = $(section).clone();
     sectionClone.find('h3').first().remove();
 
-    const bodyHtml = sectionClone.html()?.trim() ?? '';
+    const bodyHtmlRaw = sectionClone.html()?.trim() ?? '';
+    const bodyHtml = normalizeAtCoderMathInHtml(bodyHtmlRaw);
     if (bodyHtml) {
       sections.push({
         heading,
@@ -85,7 +87,8 @@ function parseProblemHtml(html: string, params: FetchProblemDetailParams): Probl
   }));
 
   if (sections.length === 0) {
-    const fallbackHtml = contentRoot.html()?.trim() ?? '';
+    const fallbackHtmlRaw = contentRoot.html()?.trim() ?? '';
+    const fallbackHtml = normalizeAtCoderMathInHtml(fallbackHtmlRaw);
     if (fallbackHtml) {
       sections.push({
         heading: '問題文',

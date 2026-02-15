@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import DOMPurify from 'dompurify';
+import { normalizeAtCoderMathInHtml } from '../../../../shared/mathNotation';
 import type { ProblemDetail, ProblemIndexItem } from '../../../../shared/types/problem';
 
 type ProblemViewProps = {
@@ -18,7 +19,8 @@ type ProblemViewProps = {
  * @returns {string} 安全化されたHTML。
  */
 function sanitizeProblemHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
+  const normalizedHtml = normalizeAtCoderMathInHtml(html);
+  return DOMPurify.sanitize(normalizedHtml, {
     USE_PROFILES: { html: true },
   });
 }
