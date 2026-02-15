@@ -8,6 +8,7 @@ import TitleBar from './TitleBar';
 import { useProblemStore } from '../../stores/problemStore';
 import { useEditorStore } from '../../stores/editorStore';
 import { useTestStore } from '../../stores/testStore';
+import { useTimerStore } from '../../stores/timerStore';
 
 /**
  * 画面全体のレイアウトを構成し、テーマ状態を管理する。
@@ -30,6 +31,14 @@ function MainLayout() {
   const editorCode = useEditorStore((state) => state.code);
   const runSampleTests = useTestStore((state) => state.runSampleTests);
   const isRunningTests = useTestStore((state) => state.isRunningTests);
+  const testResults = useTestStore((state) => state.testResults);
+  const setSelectedProblemForTimer = useTimerStore((state) => state.setSelectedProblem);
+  const isTimerRunning = useTimerStore((state) => state.isRunning);
+  const refreshTimerTick = useTimerStore((state) => state.refreshTick);
+  const startTimer = useTimerStore((state) => state.start);
+  const pauseTimer = useTimerStore((state) => state.pause);
+  const resetTimer = useTimerStore((state) => state.reset);
+  const stopOnAcceptedIfEnabled = useTimerStore((state) => state.stopOnAcceptedIfEnabled);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -38,6 +47,74 @@ function MainLayout() {
   useEffect(() => {
     void loadProblems();
   }, [loadProblems]);
+
+  useEffect(() => {
+    setSelectedProblemForTimer(selectedProblemId);
+  }, [selectedProblemId, setSelectedProblemForTimer]);
+
+  useEffect(() => {
+    if (!isTimerRunning) {
+      return;
+    }
+
+    refreshTimerTick();
+    const intervalId = window.setInterval(() => {
+      refreshTimerTick();
+    }, 200);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [isTimerRunning, refreshTimerTick]);
+
+  useEffect(() => {
+    if (testResults.length === 0) {
+      return;
+    }
+
+    const allAccepted = testResults.every((result) => result.verdict === 'AC');
+    if (allAccepted) {
+      stopOnAcceptedIfEnabled();
+    }
+  }, [testResults, stopOnAcceptedIfEnabled]);
+
+  useEffect(() => {
+    /**
+     * タイマーショートカットを処理する。
+     *
+     * @param {KeyboardEvent} event キーボードイベント。
+     * @returns {void} 値は返さない。
+     */
+    function handleTimerShortcut(event: KeyboardEvent): void {
+      if (!event.ctrlKey || !event.shiftKey) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+
+      if (key === 's') {
+        event.preventDefault();
+        startTimer();
+        return;
+      }
+
+      if (key === 'p') {
+        event.preventDefault();
+        pauseTimer();
+        return;
+      }
+
+      if (key === 'r') {
+        event.preventDefault();
+        resetTimer();
+      }
+    }
+
+    window.addEventListener('keydown', handleTimerShortcut);
+    return () => {
+      window.removeEventListener('keydown', handleTimerShortcut);
+    };
+  }, [startTimer, pauseTimer, resetTimer]);
 
   const selectedProblem = useMemo(
     () => problems.find((problem) => problem.id === selectedProblemId) ?? null,

@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import type { TestCaseResult } from '../../../../shared/types/compiler';
 import type { ProblemSample } from '../../../../shared/types/problem';
 import { useTestStore } from '../../stores/testStore';
+import ComplexityChecker from '../tools/ComplexityChecker';
+import SubmissionHistory from '../tools/SubmissionHistory';
 
 type BottomPanelProps = {
   /** 現在エディタに表示されているC++コード。 */
@@ -110,22 +112,17 @@ function BottomPanel({ sourceCode, samples }: BottomPanelProps) {
   }
 
   const isPrimaryDisabled =
-    activeTab === 'results'
-      ? isRunningTests
-      : activeTab === 'custom'
-      ? isRunningCustomInput
-      : true;
+    activeTab === 'results' ? isRunningTests : activeTab === 'custom' ? isRunningCustomInput : false;
 
   const primaryLabel =
     activeTab === 'results'
       ? isRunningTests
         ? '実行中...'
         : 'すべて実行'
-      : activeTab === 'custom'
-      ? isRunningCustomInput
-        ? '実行中...'
-        : '実行'
-      : '準備中';
+      : isRunningCustomInput
+      ? '実行中...'
+      : '実行';
+  const showPrimaryAction = activeTab === 'results' || activeTab === 'custom';
 
   return (
     <section className="bottom-panel">
@@ -156,9 +153,11 @@ function BottomPanel({ sourceCode, samples }: BottomPanelProps) {
             提出履歴
           </button>
         </div>
-        <button className="primary-button" type="button" onClick={handleRunPrimary} disabled={isPrimaryDisabled}>
-          {primaryLabel}
-        </button>
+        {showPrimaryAction ? (
+          <button className="primary-button" type="button" onClick={handleRunPrimary} disabled={isPrimaryDisabled}>
+            {primaryLabel}
+          </button>
+        ) : null}
       </header>
 
       {activeTab === 'results' ? (
@@ -268,15 +267,11 @@ function BottomPanel({ sourceCode, samples }: BottomPanelProps) {
       ) : null}
 
       {activeTab === 'complexity' ? (
-        <div className="result-list">
-          <p className="empty-note">計算量チェッカーはPhase4で実装予定です。</p>
-        </div>
+        <ComplexityChecker />
       ) : null}
 
       {activeTab === 'submissions' ? (
-        <div className="result-list">
-          <p className="empty-note">提出履歴ビューはPhase4で実装予定です。</p>
-        </div>
+        <SubmissionHistory />
       ) : null}
     </section>
   );

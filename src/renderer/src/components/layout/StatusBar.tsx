@@ -1,3 +1,6 @@
+import { useComplexityStore } from '../../stores/complexityStore';
+import { formatElapsedDuration, useTimerStore } from '../../stores/timerStore';
+
 type StatusBarProps = {
   /** 現在選択されているテーマ。 */
   theme: 'light' | 'dark';
@@ -15,6 +18,12 @@ type StatusBarProps = {
  */
 function StatusBar({ theme, selectedProblemId, problemCount }: StatusBarProps) {
   const version = window.cpeditor?.version ?? 'dev';
+  const complexitySummary = useComplexityStore((state) => state.statusSummary);
+  const isRunning = useTimerStore((state) => state.isRunning);
+  const elapsedMs = useTimerStore((state) => state.elapsedMs);
+  const startedAtMs = useTimerStore((state) => state.startedAtMs);
+  const tickMs = useTimerStore((state) => state.tickMs);
+  const timerText = formatElapsedDuration(isRunning && startedAtMs != null ? elapsedMs + (tickMs - startedAtMs) : elapsedMs);
 
   return (
     <footer className="status-bar">
@@ -22,7 +31,10 @@ function StatusBar({ theme, selectedProblemId, problemCount }: StatusBarProps) {
       <span>文字コード: UTF-8</span>
       <span>問題数: {problemCount}</span>
       <span>選択中: {selectedProblemId ?? '-'}</span>
-      <span>計算量: O(N log N) 未チェック</span>
+      <span>計算量: {complexitySummary}</span>
+      <span>
+        Timer: {timerText} {isRunning ? '(RUN)' : '(PAUSE)'}
+      </span>
       <span>テーマ: {theme === 'light' ? 'ホワイト' : 'ダーク'}</span>
       <span>cpeditor v{version}</span>
     </footer>

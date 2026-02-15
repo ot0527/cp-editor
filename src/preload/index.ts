@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { FetchProblemDetailParams, ProblemDetail, ProblemIndexItem } from '../shared/types/problem';
+import type { FetchSubmissionsParams, SubmissionItem } from '../shared/types/submission';
 import type {
   RunCustomInputParams,
   RunCustomInputResult,
@@ -30,6 +31,16 @@ function exposeBridgeApi(): void {
        */
       fetchDetail: (params: FetchProblemDetailParams) =>
         ipcRenderer.invoke('api:fetch-problem-detail', params) as Promise<ProblemDetail>,
+    },
+    submissions: {
+      /**
+       * AtCoderユーザー提出履歴を取得する。
+       *
+       * @param {FetchSubmissionsParams} params 取得条件。
+       * @returns {Promise<SubmissionItem[]>} 提出履歴。
+       */
+      fetchByUser: (params: FetchSubmissionsParams) =>
+        ipcRenderer.invoke('api:fetch-submissions', params) as Promise<SubmissionItem[]>,
     },
     compiler: {
       /**

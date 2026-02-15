@@ -1,10 +1,12 @@
 import { ipcMain, shell } from 'electron';
 import type { FetchProblemDetailParams } from '../../shared/types/problem';
-import { fetchProblemIndex } from '../services/atcoderApiService';
+import type { FetchSubmissionsParams } from '../../shared/types/submission';
+import { fetchProblemIndex, fetchSubmissions } from '../services/atcoderApiService';
 import { fetchProblemDetail } from '../services/scraperService';
 
 const IPC_CHANNEL_FETCH_PROBLEMS = 'api:fetch-problems';
 const IPC_CHANNEL_FETCH_PROBLEM_DETAIL = 'api:fetch-problem-detail';
+const IPC_CHANNEL_FETCH_SUBMISSIONS = 'api:fetch-submissions';
 const IPC_CHANNEL_OPEN_EXTERNAL = 'app:open-external';
 
 /**
@@ -25,12 +27,17 @@ function canOpenExternalUrl(url: string): boolean {
 export function registerApiIpcHandlers(): void {
   ipcMain.removeHandler(IPC_CHANNEL_FETCH_PROBLEMS);
   ipcMain.removeHandler(IPC_CHANNEL_FETCH_PROBLEM_DETAIL);
+  ipcMain.removeHandler(IPC_CHANNEL_FETCH_SUBMISSIONS);
   ipcMain.removeHandler(IPC_CHANNEL_OPEN_EXTERNAL);
 
   ipcMain.handle(IPC_CHANNEL_FETCH_PROBLEMS, async () => fetchProblemIndex());
 
   ipcMain.handle(IPC_CHANNEL_FETCH_PROBLEM_DETAIL, async (_event, params: FetchProblemDetailParams) => {
     return fetchProblemDetail(params);
+  });
+
+  ipcMain.handle(IPC_CHANNEL_FETCH_SUBMISSIONS, async (_event, params: FetchSubmissionsParams) => {
+    return fetchSubmissions(params);
   });
 
   ipcMain.handle(IPC_CHANNEL_OPEN_EXTERNAL, async (_event, url: string) => {

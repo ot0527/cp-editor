@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import type { FetchProblemDetailParams, ProblemDetail, ProblemIndexItem } from '../../shared/types/problem';
+import type { FetchSubmissionsParams, SubmissionItem } from '../../shared/types/submission';
 import type {
   RunCustomInputParams,
   RunCustomInputResult,
@@ -16,6 +17,9 @@ declare global {
       problems: {
         fetchIndex: () => Promise<ProblemIndexItem[]>;
         fetchDetail: (params: FetchProblemDetailParams) => Promise<ProblemDetail>;
+      };
+      submissions: {
+        fetchByUser: (params: FetchSubmissionsParams) => Promise<SubmissionItem[]>;
       };
       compiler: {
         runSampleTests: (params: RunSampleTestsParams) => Promise<RunSampleTestsResult>;

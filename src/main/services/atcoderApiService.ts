@@ -1,10 +1,13 @@
 import categoryMapping from '../../data/categoryMapping.json';
 import { CATEGORY_ORDER, difficultyBandToColor, toDifficultyBand } from '../../shared/problemMeta';
 import type { ProblemCategory, ProblemIndexItem } from '../../shared/types/problem';
+import type { FetchSubmissionsParams, SubmissionItem } from '../../shared/types/submission';
 import { fetchJsonWithCache } from './cacheService';
 
 const ATCODER_PROBLEMS_BASE_URL = 'https://kenkoooo.com/atcoder/resources';
+const ATCODER_USER_API_BASE_URL = 'https://kenkoooo.com/atcoder/atcoder-api/v3';
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
 
 interface AtCoderProblemRecord {
   id: string;
@@ -18,6 +21,18 @@ interface AtCoderProblemModel {
 }
 
 type AtCoderProblemModelMap = Record<string, AtCoderProblemModel>;
+
+interface AtCoderSubmissionRecord {
+  id: number;
+  epoch_second: number;
+  problem_id: string;
+  contest_id: string;
+  language?: string;
+  result?: string;
+  execution_time?: number;
+  memory?: number;
+  point?: number;
+}
 
 let lastAtCoderRequestAt = 0;
 
@@ -110,6 +125,20 @@ function inferCategory(problemId: string, title: string): ProblemCategory {
 }
 
 /**
+ * unknown値から有限な数値のみを取り出す。
+ *
+ * @param {unknown} value 判定対象。
+ * @returns {number | null} 数値ならその値、それ以外はnull。
+ */
+function toFiniteNumber(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return null;
+  }
+
+  return value;
+}
+
+/**
  * AtCoder Problems APIから問題一覧と難易度を取得し、UI向け形式へ変換する。
  *
  * @returns {Promise<ProblemIndexItem[]>} 問題一覧。
@@ -148,4 +177,49 @@ export async function fetchProblemIndex(): Promise<ProblemIndexItem[]> {
       } satisfies ProblemIndexItem;
     })
     .sort((left, right) => left.id.localeCompare(right.id));
+}
+
+/**
+ * AtCoder Problems APIからユーザー提出履歴を取得する。
+ *
+ * @param {FetchSubmissionsParams} params 取得パラメータ。
+ * @returns {Promise<SubmissionItem[]>} 提出履歴配列。
+ */
+export async function fetchSubmissions(params: FetchSubmissionsParams): Promise<SubmissionItem[]> {
+  const username = params.username.trim();
+  if (!username) {
+    throw new Error('ユーザー名を入力してください。');
+  }
+
+  const fromSecond =
+    params.fromSecond != null && Number.isFinite(params.fromSecond) && params.fromSecond >= 0
+      ? Math.floor(params.fromSecond)
+      : 0;
+
+  await throttleAtCoderRequest();
+  const records = await fetchJsonWithCache<AtCoderSubmissionRecord[]>({
+    url: `${ATCODER_USER_API_BASE_URL}/user/submissions?user=${encodeURIComponent(username)}&from_second=${fromSecond}`,
+    cacheKey: `atcoder_submissions_${username.toLowerCase()}_${fromSecond}`,
+    ttlMs: FIVE_MINUTES_MS,
+  });
+
+  return records
+    .map((record) => ({
+      id: record.id,
+      epochSecond: record.epoch_second,
+      problemId: record.problem_id,
+      contestId: record.contest_id,
+      language: record.language ?? '-',
+      result: record.result ?? 'WJ',
+      executionTimeMs: toFiniteNumber(record.execution_time),
+      memoryKb: toFiniteNumber(record.memory),
+      point: toFiniteNumber(record.point),
+    }))
+    .sort((left, right) => {
+      if (left.epochSecond === right.epochSecond) {
+        return right.id - left.id;
+      }
+
+      return right.epochSecond - left.epochSecond;
+    });
 }

@@ -1,6 +1,6 @@
-# CPEditor (Phase 3)
+# CPEditor (Phase 4)
 
-`CPEditor-design-document.md` の Phase 3 までを反映した実装です。
+`CPEditor-design-document.md` の Phase 4 までを反映した実装です。
 
 ## 実装済み
 
@@ -15,6 +15,9 @@
 - サンプルケース一括実行（AC/WA/TLE/RE表示）
 - カスタム入出力実行パネル
 - WA時の簡易diff表示
+- タイマー機能（Start/Pause/Reset、問題ごとの経過時間記録、ショートカット対応）
+- 計算量チェッカー（変数入力・プリセット・間に合う判定）
+- 提出履歴ビュー（AtCoderユーザー名指定 + 期間指定取得）
 - メインプロセスIPC経由の外部リンクオープン（AtCoderのみ許可）
 
 ## セットアップ
