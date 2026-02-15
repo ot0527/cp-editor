@@ -6,6 +6,8 @@ import BottomPanel from '../test/BottomPanel';
 import StatusBar from './StatusBar';
 import TitleBar from './TitleBar';
 import { useProblemStore } from '../../stores/problemStore';
+import { useEditorStore } from '../../stores/editorStore';
+import { useTestStore } from '../../stores/testStore';
 
 /**
  * 画面全体のレイアウトを構成し、テーマ状態を管理する。
@@ -25,6 +27,9 @@ function MainLayout() {
   const loadProblems = useProblemStore((state) => state.loadProblems);
   const selectProblem = useProblemStore((state) => state.selectProblem);
   const refreshSelectedProblem = useProblemStore((state) => state.refreshSelectedProblem);
+  const editorCode = useEditorStore((state) => state.code);
+  const runSampleTests = useTestStore((state) => state.runSampleTests);
+  const isRunningTests = useTestStore((state) => state.isRunningTests);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -68,6 +73,15 @@ function MainLayout() {
     void window.cpeditor.app.openExternal(url);
   }
 
+  /**
+   * 選択中問題のサンプルケースで実行する。
+   *
+   * @returns {void} 値は返さない。
+   */
+  function handleRunSampleTests(): void {
+    void runSampleTests(editorCode, selectedProblemDetail?.samples ?? []);
+  }
+
   return (
     <div className="app-shell">
       <TitleBar theme={theme} onToggleTheme={handleToggleTheme} />
@@ -99,10 +113,12 @@ function MainLayout() {
                 theme={theme}
                 problemId={selectedProblem?.id}
                 problemTitle={selectedProblem?.title}
+                onRunSampleTests={handleRunSampleTests}
+                isRunningTests={isRunningTests}
               />
             </section>
           </div>
-          <BottomPanel />
+          <BottomPanel sourceCode={editorCode} samples={selectedProblemDetail?.samples ?? []} />
         </main>
       </div>
       <StatusBar theme={theme} selectedProblemId={selectedProblem?.id ?? null} problemCount={problems.length} />

@@ -1,5 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { FetchProblemDetailParams, ProblemDetail, ProblemIndexItem } from '../shared/types/problem';
+import type {
+  RunCustomInputParams,
+  RunCustomInputResult,
+  RunSampleTestsParams,
+  RunSampleTestsResult,
+} from '../shared/types/compiler';
 
 /**
  * レンダラープロセスへ安全に公開する最小限のAPIを登録する。
@@ -24,6 +30,24 @@ function exposeBridgeApi(): void {
        */
       fetchDetail: (params: FetchProblemDetailParams) =>
         ipcRenderer.invoke('api:fetch-problem-detail', params) as Promise<ProblemDetail>,
+    },
+    compiler: {
+      /**
+       * サンプルケース群でコンパイル・実行を行う。
+       *
+       * @param {RunSampleTestsParams} params 実行パラメータ。
+       * @returns {Promise<RunSampleTestsResult>} 実行結果。
+       */
+      runSampleTests: (params: RunSampleTestsParams) =>
+        ipcRenderer.invoke('compiler:run-sample-tests', params) as Promise<RunSampleTestsResult>,
+      /**
+       * カスタム入力でコンパイル・実行を行う。
+       *
+       * @param {RunCustomInputParams} params 実行パラメータ。
+       * @returns {Promise<RunCustomInputResult>} 実行結果。
+       */
+      runCustomInput: (params: RunCustomInputParams) =>
+        ipcRenderer.invoke('compiler:run-custom-input', params) as Promise<RunCustomInputResult>,
     },
     app: {
       /**

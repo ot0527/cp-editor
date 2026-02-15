@@ -22,6 +22,9 @@
   --primary-text: #ffffff;
   --ac: #11855f;
   --wa: #c63d55;
+  --tle: #b68a00;
+  --re: #6c4fd6;
+  --ce: #d96d1b;
 }
 
 :root[data-theme='dark'] {
@@ -41,6 +44,9 @@
   --primary-text: #0f1b30;
   --ac: #5fd09f;
   --wa: #ff8ea3;
+  --tle: #f6d580;
+  --re: #cba6f7;
+  --ce: #fab387;
 }
 
 * {
@@ -587,6 +593,8 @@ input {
   padding: 12px;
   display: grid;
   gap: 8px;
+  min-height: 0;
+  overflow: auto;
 }
 
 .result-item {
@@ -600,11 +608,6 @@ input {
   padding: 8px 10px;
 }
 
-.result-item small {
-  grid-column: 1 / -1;
-  color: var(--text-muted);
-}
-
 .verdict {
   font-weight: 700;
 }
@@ -615,6 +618,103 @@ input {
 
 .verdict.wa {
   color: var(--wa);
+}
+
+.verdict.tle {
+  color: var(--tle);
+}
+
+.verdict.re {
+  color: var(--re);
+}
+
+.verdict.ce {
+  color: var(--ce);
+}
+
+.verdict.ok {
+  color: var(--ac);
+}
+
+.result-detail {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+}
+
+.result-detail small {
+  color: var(--text-muted);
+}
+
+.result-summary {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.diff-block {
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  padding: 8px;
+  font-family: var(--mono-font);
+  font-size: 12px;
+  overflow: auto;
+}
+
+.diff-line {
+  display: block;
+  white-space: pre-wrap;
+}
+
+.diff-line.add {
+  color: var(--ac);
+}
+
+.diff-line.remove {
+  color: var(--wa);
+}
+
+.custom-io-panel {
+  min-height: 0;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  overflow: auto;
+}
+
+.custom-io-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.custom-io-column {
+  min-height: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.io-textarea {
+  width: 100%;
+  min-height: 120px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-family: var(--mono-font);
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px;
+  resize: vertical;
+}
+
+.custom-io-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .status-bar {
@@ -669,6 +769,10 @@ input {
 
   .bottom-panel {
     height: 190px;
+  }
+
+  .custom-io-grid {
+    grid-template-columns: 1fr;
   }
 
   .status-bar {

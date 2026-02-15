@@ -1,6 +1,6 @@
-# CPEditor (Phase 2)
+# CPEditor (Phase 3)
 
-`CPEditor-design-document.md` の Phase 2 までを反映した実装です。
+`CPEditor-design-document.md` の Phase 3 までを反映した実装です。
 
 ## 実装済み
 
@@ -11,6 +11,10 @@
 - AtCoder Problems API 連携（問題一覧 + difficulty）
 - サイドバーのカテゴリ/難易度ツリー表示 + インクリメンタル検索
 - AtCoder問題ページのスクレイピング表示（問題文セクション + サンプルケース）
+- g++ を使ったコンパイル・実行（タイムアウト制御つき）
+- サンプルケース一括実行（AC/WA/TLE/RE表示）
+- カスタム入出力実行パネル
+- WA時の簡易diff表示
 - メインプロセスIPC経由の外部リンクオープン（AtCoderのみ許可）
 
 ## セットアップ
@@ -33,4 +37,4 @@ npm run typecheck
 
 - 初回読み込み時は AtCoder Problems API から問題一覧を取得します（ネットワーク接続が必要）。
 - 問題文は問題選択時に AtCoder から取得し、ローカルキャッシュを再利用します。
-- コンパイル・実行機能は Phase 3 で実装予定です。
+- 実行には `g++` がPATH上に存在する必要があります。

@@ -153,7 +153,7 @@ function Sidebar({
 
       <div className="storage-card">
         <p>表示中 {problems.length} 問</p>
-        <small>Phase2: AtCoder Problems APIと連携済み</small>
+        <small>Phase3: 実行・テスト機能まで実装済み</small>
       </div>
     </div>
   );
