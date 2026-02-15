@@ -153,7 +153,7 @@ function Sidebar({
 
       <div className="storage-card">
         <p>表示中 {problems.length} 問</p>
-        <small>Phase3: 実行・テスト機能まで実装済み</small>
+        <small>Phase5: 設定・ショートカット・スニペット対応</small>
       </div>
     </div>
   );

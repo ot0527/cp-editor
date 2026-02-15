@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import defaultTemplate from '../../../data/defaultTemplate.cpp?raw';
+import { useSettingsStore } from './settingsStore';
 
 interface EditorStoreState {
   code: string;
@@ -20,12 +21,15 @@ type EditorStore = EditorStoreState & EditorStoreActions;
  * @returns {string} 挿入するテンプレート。
  */
 function createEditorTemplate(problemId: string | undefined, problemTitle: string | undefined): string {
+  const settingsTemplate = useSettingsStore.getState().problemTemplate;
+  const template = settingsTemplate ?? defaultTemplate;
+
   if (!problemId) {
-    return defaultTemplate;
+    return template;
   }
 
   const header = `// Problem: ${problemId}${problemTitle ? ` - ${problemTitle}` : ''}\n\n`;
-  return `${header}${defaultTemplate}`;
+  return `${header}${template}`;
 }
 
 /**

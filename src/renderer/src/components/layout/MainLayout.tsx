@@ -5,6 +5,7 @@ import CodeEditor from '../editor/CodeEditor';
 import BottomPanel from '../test/BottomPanel';
 import StatusBar from './StatusBar';
 import TitleBar from './TitleBar';
+import SettingsModal from '../settings/SettingsModal';
 import { useProblemStore } from '../../stores/problemStore';
 import { useEditorStore } from '../../stores/editorStore';
 import { useTestStore } from '../../stores/testStore';
@@ -17,6 +18,7 @@ import { useTimerStore } from '../../stores/timerStore';
  */
 function MainLayout() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const problems = useProblemStore((state) => state.problems);
   const selectedProblemId = useProblemStore((state) => state.selectedProblemId);
   const selectedProblemDetail = useProblemStore((state) => state.selectedProblemDetail);
@@ -78,44 +80,6 @@ function MainLayout() {
     }
   }, [testResults, stopOnAcceptedIfEnabled]);
 
-  useEffect(() => {
-    /**
-     * タイマーショートカットを処理する。
-     *
-     * @param {KeyboardEvent} event キーボードイベント。
-     * @returns {void} 値は返さない。
-     */
-    function handleTimerShortcut(event: KeyboardEvent): void {
-      if (!event.ctrlKey || !event.shiftKey) {
-        return;
-      }
-
-      const key = event.key.toLowerCase();
-
-      if (key === 's') {
-        event.preventDefault();
-        startTimer();
-        return;
-      }
-
-      if (key === 'p') {
-        event.preventDefault();
-        pauseTimer();
-        return;
-      }
-
-      if (key === 'r') {
-        event.preventDefault();
-        resetTimer();
-      }
-    }
-
-    window.addEventListener('keydown', handleTimerShortcut);
-    return () => {
-      window.removeEventListener('keydown', handleTimerShortcut);
-    };
-  }, [startTimer, pauseTimer, resetTimer]);
-
   const selectedProblem = useMemo(
     () => problems.find((problem) => problem.id === selectedProblemId) ?? null,
     [problems, selectedProblemId]
@@ -151,6 +115,24 @@ function MainLayout() {
   }
 
   /**
+   * 設定モーダルを開く。
+   *
+   * @returns {void} 値は返さない。
+   */
+  function handleOpenSettings(): void {
+    setIsSettingsOpen(true);
+  }
+
+  /**
+   * 設定モーダルを閉じる。
+   *
+   * @returns {void} 値は返さない。
+   */
+  function handleCloseSettings(): void {
+    setIsSettingsOpen(false);
+  }
+
+  /**
    * 選択中問題のサンプルケースで実行する。
    *
    * @returns {void} 値は返さない。
@@ -161,7 +143,7 @@ function MainLayout() {
 
   return (
     <div className="app-shell">
-      <TitleBar theme={theme} onToggleTheme={handleToggleTheme} />
+      <TitleBar theme={theme} onToggleTheme={handleToggleTheme} onOpenSettings={handleOpenSettings} />
       <div className="content-row">
         <aside className="sidebar">
           <Sidebar
@@ -192,12 +174,16 @@ function MainLayout() {
                 problemTitle={selectedProblem?.title}
                 onRunSampleTests={handleRunSampleTests}
                 isRunningTests={isRunningTests}
+                onTimerStart={startTimer}
+                onTimerPause={pauseTimer}
+                onTimerReset={resetTimer}
               />
             </section>
           </div>
           <BottomPanel sourceCode={editorCode} samples={selectedProblemDetail?.samples ?? []} />
         </main>
       </div>
+      <SettingsModal isOpen={isSettingsOpen} onClose={handleCloseSettings} />
       <StatusBar theme={theme} selectedProblemId={selectedProblem?.id ?? null} problemCount={problems.length} />
     </div>
   );

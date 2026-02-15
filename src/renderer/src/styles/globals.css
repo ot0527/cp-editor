@@ -213,6 +213,17 @@ input {
   color: var(--accent);
 }
 
+.ghost-button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.ghost-button.danger {
+  border-color: color-mix(in srgb, var(--wa) 45%, var(--border));
+  color: var(--wa);
+}
+
 .ghost-button:disabled,
 .theme-toggle:disabled,
 .primary-button:disabled {
@@ -598,11 +609,54 @@ input {
   font-size: 13px;
 }
 
+.editor-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .file-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   background: #44d7a1;
+}
+
+.editor-content {
+  flex: 1;
+  min-height: 0;
+}
+
+.vim-status-strip {
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-soft) 88%, transparent);
+  font-family: var(--mono-font);
+  font-size: 12px;
+}
+
+.vim-status-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.vim-status-value {
+  min-width: 88px;
+}
+
+.vim-status-error {
+  color: var(--wa);
 }
 
 .bottom-panel {
@@ -883,6 +937,178 @@ input {
   border-bottom: none;
 }
 
+.settings-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, #0a1426 62%, transparent);
+}
+
+.settings-modal {
+  width: min(960px, 100%);
+  max-height: min(88vh, 860px);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 30px 65px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-header {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settings-title {
+  margin: 0;
+  font-size: 20px;
+}
+
+.settings-subtitle {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.settings-body {
+  overflow: auto;
+  padding: 16px 20px 20px;
+  display: grid;
+  gap: 18px;
+}
+
+.settings-section {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.settings-section-title {
+  margin: 0;
+  font-size: 14px;
+}
+
+.settings-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.settings-field {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.settings-field.vertical {
+  gap: 8px;
+}
+
+.settings-field .compact-input {
+  width: 120px;
+}
+
+.settings-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.settings-check input {
+  margin: 0;
+}
+
+.shortcut-list {
+  display: grid;
+  gap: 8px;
+}
+
+.shortcut-row {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 10px;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.shortcut-meta {
+  display: grid;
+  gap: 2px;
+}
+
+.shortcut-meta strong {
+  font-size: 13px;
+}
+
+.shortcut-meta small {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.shortcut-binding {
+  font-family: var(--mono-font);
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
+.settings-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.settings-textarea {
+  width: 100%;
+  min-height: 120px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--mono-font);
+  font-size: 12px;
+  line-height: 1.5;
+  resize: vertical;
+  padding: 10px;
+}
+
+.settings-textarea.template {
+  min-height: 240px;
+}
+
+.settings-inline-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settings-footer {
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
 .status-bar {
   height: 34px;
   display: flex;
@@ -896,7 +1122,7 @@ input {
 }
 
 @media (max-width: 1160px) {
-  .title-right .ghost-button {
+  .title-right .ghost-button:not(.settings-open-button) {
     display: none;
   }
 
@@ -963,5 +1189,33 @@ input {
     flex-wrap: wrap;
     height: auto;
     padding: 8px 12px;
+  }
+
+  .editor-toolbar {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .editor-toolbar-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .settings-backdrop {
+    padding: 10px;
+  }
+
+  .settings-header,
+  .settings-body,
+  .settings-footer {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .shortcut-row {
+    grid-template-columns: 1fr;
+    justify-items: start;
   }
 }

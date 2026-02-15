@@ -5,6 +5,8 @@ type TitleBarProps = {
   theme: 'light' | 'dark';
   /** ユーザーがテーマ切替ボタンを押したときの処理。 */
   onToggleTheme: () => void;
+  /** 設定ボタン押下時の処理。 */
+  onOpenSettings: () => void;
 };
 
 /**
@@ -13,7 +15,7 @@ type TitleBarProps = {
  * @param {TitleBarProps} props 表示テーマとテーマ切替ハンドラ。
  * @returns {JSX.Element} タイトルバー要素を返す。
  */
-function TitleBar({ theme, onToggleTheme }: TitleBarProps) {
+function TitleBar({ theme, onToggleTheme, onOpenSettings }: TitleBarProps) {
   const isRunning = useTimerStore((state) => state.isRunning);
   const elapsedMs = useTimerStore((state) => state.elapsedMs);
   const startedAtMs = useTimerStore((state) => state.startedAtMs);
@@ -60,8 +62,8 @@ function TitleBar({ theme, onToggleTheme }: TitleBarProps) {
             AutoStop AC
           </label>
         </div>
-        <button type="button" className="ghost-button">
-          共有
+        <button type="button" className="ghost-button settings-open-button" onClick={onOpenSettings}>
+          設定
         </button>
         <button type="button" className="theme-toggle" onClick={onToggleTheme}>
           {theme === 'light' ? 'ダークモード' : 'ホワイトモード'}
