@@ -150,9 +150,11 @@ function MainLayout() {
             problems={problems}
             searchQuery={searchQuery}
             isLoading={isLoadingProblems}
+            errorMessage={errorMessage}
             selectedProblemId={selectedProblemId}
             onSearchQueryChange={setSearchQuery}
             onSelectProblem={handleSelectProblem}
+            onRetryLoadProblems={() => void loadProblems()}
           />
         </aside>
         <main className="main-area">

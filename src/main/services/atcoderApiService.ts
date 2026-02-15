@@ -8,6 +8,7 @@ const ATCODER_PROBLEMS_BASE_URL = 'https://kenkoooo.com/atcoder/resources';
 const ATCODER_USER_API_BASE_URL = 'https://kenkoooo.com/atcoder/atcoder-api/v3';
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
+const REQUEST_INTERVAL_MS = 1000;
 
 interface AtCoderProblemRecord {
   id: string;
@@ -34,9 +35,22 @@ interface AtCoderSubmissionRecord {
   point?: number;
 }
 
-let lastAtCoderRequestAt = 0;
+let nextAtCoderRequestAtMs = 0;
+let atCoderRequestQueue: Promise<void> = Promise.resolve();
 
 const categorySet = new Set<ProblemCategory>(CATEGORY_ORDER);
+
+/**
+ * 指定ミリ秒だけ待機する。
+ *
+ * @param {number} delayMs 待機時間（ミリ秒）。
+ * @returns {Promise<void>} 値は返さない。
+ */
+function wait(delayMs: number): Promise<void> {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, delayMs);
+  });
+}
 
 /**
  * AtCoder API呼び出し間隔を最低1秒に保つ。
@@ -44,16 +58,18 @@ const categorySet = new Set<ProblemCategory>(CATEGORY_ORDER);
  * @returns {Promise<void>} 値は返さない。
  */
 async function throttleAtCoderRequest(): Promise<void> {
-  const elapsed = Date.now() - lastAtCoderRequestAt;
-  const waitMs = Math.max(0, 1000 - elapsed);
+  const queued = atCoderRequestQueue.then(async () => {
+    const now = Date.now();
+    const waitMs = Math.max(0, nextAtCoderRequestAtMs - now);
+    if (waitMs > 0) {
+      await wait(waitMs);
+    }
 
-  if (waitMs > 0) {
-    await new Promise<void>((resolve) => {
-      setTimeout(() => resolve(), waitMs);
-    });
-  }
+    nextAtCoderRequestAtMs = Date.now() + REQUEST_INTERVAL_MS;
+  });
 
-  lastAtCoderRequestAt = Date.now();
+  atCoderRequestQueue = queued.catch(() => undefined);
+  await queued;
 }
 
 /**
@@ -144,19 +160,20 @@ function toFiniteNumber(value: unknown): number | null {
  * @returns {Promise<ProblemIndexItem[]>} 問題一覧。
  */
 export async function fetchProblemIndex(): Promise<ProblemIndexItem[]> {
-  await throttleAtCoderRequest();
-  const problems = await fetchJsonWithCache<AtCoderProblemRecord[]>({
-    url: `${ATCODER_PROBLEMS_BASE_URL}/problems.json`,
-    cacheKey: 'atcoder_problems',
-    ttlMs: ONE_DAY_MS,
-  });
-
-  await throttleAtCoderRequest();
-  const models = await fetchJsonWithCache<AtCoderProblemModelMap>({
-    url: `${ATCODER_PROBLEMS_BASE_URL}/problem-models.json`,
-    cacheKey: 'atcoder_problem_models',
-    ttlMs: ONE_DAY_MS,
-  });
+  const [problems, models] = await Promise.all([
+    fetchJsonWithCache<AtCoderProblemRecord[]>({
+      url: `${ATCODER_PROBLEMS_BASE_URL}/problems.json`,
+      cacheKey: 'atcoder_problems',
+      ttlMs: ONE_DAY_MS,
+      onBeforeNetworkFetch: throttleAtCoderRequest,
+    }),
+    fetchJsonWithCache<AtCoderProblemModelMap>({
+      url: `${ATCODER_PROBLEMS_BASE_URL}/problem-models.json`,
+      cacheKey: 'atcoder_problem_models',
+      ttlMs: ONE_DAY_MS,
+      onBeforeNetworkFetch: throttleAtCoderRequest,
+    }),
+  ]);
 
   return problems
     .filter((problem) => problem.id && problem.contest_id)
@@ -196,11 +213,11 @@ export async function fetchSubmissions(params: FetchSubmissionsParams): Promise<
       ? Math.floor(params.fromSecond)
       : 0;
 
-  await throttleAtCoderRequest();
   const records = await fetchJsonWithCache<AtCoderSubmissionRecord[]>({
     url: `${ATCODER_USER_API_BASE_URL}/user/submissions?user=${encodeURIComponent(username)}&from_second=${fromSecond}`,
     cacheKey: `atcoder_submissions_${username.toLowerCase()}_${fromSecond}`,
     ttlMs: FIVE_MINUTES_MS,
+    onBeforeNetworkFetch: throttleAtCoderRequest,
   });
 
   return records

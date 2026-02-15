@@ -37,60 +37,15 @@ function toErrorMessage(error: unknown): string {
 /**
  * 問題データ・選択状態を保持するZustandストア。
  */
-export const useProblemStore = create<ProblemStore>((set, get) => ({
-  problems: [],
-  selectedProblemId: null,
-  selectedProblemDetail: null,
-  searchQuery: '',
-  isLoadingProblems: false,
-  isLoadingProblemDetail: false,
-  errorMessage: null,
-
+export const useProblemStore = create<ProblemStore>((set, get) => {
   /**
-   * サイドバー検索クエリを更新する。
+   * 問題詳細を取得し、選択状態へ反映する。
    *
-   * @param {string} query 検索クエリ。
-   * @returns {void} 値は返さない。
-   */
-  setSearchQuery: (query: string): void => {
-    set({ searchQuery: query });
-  },
-
-  /**
-   * AtCoder Problems APIから問題一覧を読み込む。
-   *
+   * @param {string} problemId 取得対象の問題ID。
+   * @param {boolean} forceRefresh キャッシュを無視して再取得するか。
    * @returns {Promise<void>} 値は返さない。
    */
-  loadProblems: async (): Promise<void> => {
-    set({ isLoadingProblems: true, errorMessage: null });
-
-    try {
-      const problems = await window.cpeditor.problems.fetchIndex();
-      set({ problems, isLoadingProblems: false });
-
-      if (problems.length === 0) {
-        set({ selectedProblemId: null, selectedProblemDetail: null });
-        return;
-      }
-
-      const currentSelectedId = get().selectedProblemId;
-      const selected = problems.find((problem) => problem.id === currentSelectedId) ?? problems[0];
-      await get().selectProblem(selected.id);
-    } catch (error) {
-      set({
-        isLoadingProblems: false,
-        errorMessage: toErrorMessage(error),
-      });
-    }
-  },
-
-  /**
-   * 問題を選択し、問題詳細を取得する。
-   *
-   * @param {string} problemId 選択する問題ID。
-   * @returns {Promise<void>} 値は返さない。
-   */
-  selectProblem: async (problemId: string): Promise<void> => {
+  async function loadProblemDetail(problemId: string, forceRefresh: boolean): Promise<void> {
     const selectedProblem = get().problems.find((problem) => problem.id === problemId);
     if (!selectedProblem) {
       return;
@@ -108,6 +63,7 @@ export const useProblemStore = create<ProblemStore>((set, get) => ({
         contestId: selectedProblem.contestId,
         problemId: selectedProblem.id,
         title: selectedProblem.title,
+        forceRefresh,
       });
 
       if (get().selectedProblemId !== problemId) {
@@ -128,19 +84,77 @@ export const useProblemStore = create<ProblemStore>((set, get) => ({
         errorMessage: toErrorMessage(error),
       });
     }
-  },
+  }
 
-  /**
-   * 現在選択中の問題詳細を再取得する。
-   *
-   * @returns {Promise<void>} 値は返さない。
-   */
-  refreshSelectedProblem: async (): Promise<void> => {
-    const selectedProblemId = get().selectedProblemId;
-    if (!selectedProblemId) {
-      return;
-    }
+  return {
+    problems: [],
+    selectedProblemId: null,
+    selectedProblemDetail: null,
+    searchQuery: '',
+    isLoadingProblems: false,
+    isLoadingProblemDetail: false,
+    errorMessage: null,
 
-    await get().selectProblem(selectedProblemId);
-  },
-}));
+    /**
+     * サイドバー検索クエリを更新する。
+     *
+     * @param {string} query 検索クエリ。
+     * @returns {void} 値は返さない。
+     */
+    setSearchQuery: (query: string): void => {
+      set({ searchQuery: query });
+    },
+
+    /**
+     * AtCoder Problems APIから問題一覧を読み込む。
+     *
+     * @returns {Promise<void>} 値は返さない。
+     */
+    loadProblems: async (): Promise<void> => {
+      set({ isLoadingProblems: true, errorMessage: null });
+
+      try {
+        const problems = await window.cpeditor.problems.fetchIndex();
+        set({ problems, isLoadingProblems: false });
+
+        if (problems.length === 0) {
+          set({ selectedProblemId: null, selectedProblemDetail: null });
+          return;
+        }
+
+        const currentSelectedId = get().selectedProblemId;
+        const selected = problems.find((problem) => problem.id === currentSelectedId) ?? problems[0];
+        await loadProblemDetail(selected.id, false);
+      } catch (error) {
+        set({
+          isLoadingProblems: false,
+          errorMessage: toErrorMessage(error),
+        });
+      }
+    },
+
+    /**
+     * 問題を選択し、問題詳細を取得する。
+     *
+     * @param {string} problemId 選択する問題ID。
+     * @returns {Promise<void>} 値は返さない。
+     */
+    selectProblem: async (problemId: string): Promise<void> => {
+      await loadProblemDetail(problemId, false);
+    },
+
+    /**
+     * 現在選択中の問題詳細を再取得する。
+     *
+     * @returns {Promise<void>} 値は返さない。
+     */
+    refreshSelectedProblem: async (): Promise<void> => {
+      const selectedProblemId = get().selectedProblemId;
+      if (!selectedProblemId) {
+        return;
+      }
+
+      await loadProblemDetail(selectedProblemId, true);
+    },
+  };
+});

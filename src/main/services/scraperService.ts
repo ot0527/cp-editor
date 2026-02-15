@@ -9,7 +9,7 @@ import { readCache, writeCache } from './cacheService';
  * @returns {string} キャッシュキー。
  */
 function getProblemDetailCacheKey(params: FetchProblemDetailParams): string {
-  return `problem_detail_${params.problemId}`;
+  return `problem_detail_${params.contestId}_${params.problemId}`;
 }
 
 /**
@@ -84,6 +84,16 @@ function parseProblemHtml(html: string, params: FetchProblemDetailParams): Probl
     output: sampleOutputMap.get(index) ?? '',
   }));
 
+  if (sections.length === 0) {
+    const fallbackHtml = contentRoot.html()?.trim() ?? '';
+    if (fallbackHtml) {
+      sections.push({
+        heading: '問題文',
+        html: fallbackHtml,
+      });
+    }
+  }
+
   return {
     problemId: params.problemId,
     contestId: params.contestId,
@@ -104,7 +114,7 @@ export async function fetchProblemDetail(params: FetchProblemDetailParams): Prom
   const cacheKey = getProblemDetailCacheKey(params);
   const cached = await readCache<ProblemDetail>(cacheKey);
 
-  if (cached?.data) {
+  if (!params.forceRefresh && cached?.data) {
     return cached.data;
   }
 

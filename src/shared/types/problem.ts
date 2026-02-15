@@ -52,4 +52,5 @@ export interface FetchProblemDetailParams {
   contestId: string;
   problemId: string;
   title: string;
+  forceRefresh?: boolean;
 }

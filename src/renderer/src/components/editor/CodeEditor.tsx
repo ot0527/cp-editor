@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Editor from '@monaco-editor/react';
+import Editor, { loader } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
 import type { editor as MonacoEditorNamespace } from 'monaco-editor';
 import { useEditorStore } from '../../stores/editorStore';
 import { useSettingsStore } from '../../stores/settingsStore';
@@ -33,6 +34,8 @@ interface MonacoVimModule {
 }
 
 const MONACO_VIM_MODULE_NAME = 'monaco-vim';
+
+loader.config({ monaco });
 
 /**
  * フォーム入力中など、グローバルショートカットを無視するべき対象か判定する。

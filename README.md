@@ -1,6 +1,6 @@
-# CPEditor (Phase 5)
+# CPEditor (Phase 6)
 
-`CPEditor-design-document.md` の Phase 5 までを反映した実装です。
+`CPEditor-design-document.md` の Phase 6 までを反映した実装です。
 
 ## 実装済み
 
@@ -22,6 +22,11 @@
 - 設定画面（エディタ表示設定、テンプレート編集、クイックスニペット編集）
 - ショートカットカスタマイズ（サンプル実行・スニペット挿入・タイマー操作）
 - Vimモード切り替え（`monaco-vim` 利用時）
+- APIキャッシュ最適化（メモリキャッシュ・同時リクエスト重複排除・ネットワーク失敗時フォールバック）
+- AtCoder API呼び出しのレート制御改善（競合時も1秒間隔を維持）
+- メインウィンドウのセキュリティ強化（`sandbox`有効化、外部ナビゲーション抑止）
+- ユニットテスト整備（Vitest）
+- 配布ビルドコマンド追加（electron-builder）
 
 ## セットアップ
 
@@ -35,7 +40,11 @@ npm run dev
 ```bash
 npm run dev
 npm run build
+npm run dist
+npm run dist:dir
 npm run preview
+npm run test
+npm run test:run
 npm run typecheck
 ```
 

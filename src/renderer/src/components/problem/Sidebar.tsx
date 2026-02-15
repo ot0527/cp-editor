@@ -6,9 +6,11 @@ type SidebarProps = {
   problems: ProblemIndexItem[];
   searchQuery: string;
   isLoading: boolean;
+  errorMessage: string | null;
   selectedProblemId: string | null;
   onSearchQueryChange: (query: string) => void;
   onSelectProblem: (problemId: string) => void;
+  onRetryLoadProblems: () => void;
 };
 
 interface GroupedCategory {
@@ -82,11 +84,14 @@ function Sidebar({
   problems,
   searchQuery,
   isLoading,
+  errorMessage,
   selectedProblemId,
   onSearchQueryChange,
   onSelectProblem,
+  onRetryLoadProblems,
 }: SidebarProps) {
   const groupedProblems = useMemo(() => groupProblems(problems, searchQuery), [problems, searchQuery]);
+  const hasProblemListError = !isLoading && problems.length === 0 && Boolean(errorMessage);
 
   return (
     <div className="sidebar-body">
@@ -100,7 +105,17 @@ function Sidebar({
 
       {isLoading ? <p className="empty-note">問題一覧を取得中...</p> : null}
 
-      {!isLoading && groupedProblems.length === 0 ? (
+      {hasProblemListError ? (
+        <div className="error-box">
+          <p>問題一覧の取得に失敗しました。</p>
+          <small>{errorMessage}</small>
+          <button type="button" className="ghost-button" onClick={onRetryLoadProblems}>
+            再試行
+          </button>
+        </div>
+      ) : null}
+
+      {!isLoading && !hasProblemListError && groupedProblems.length === 0 ? (
         <p className="empty-note">条件に一致する問題がありません。</p>
       ) : null}
 
@@ -153,7 +168,7 @@ function Sidebar({
 
       <div className="storage-card">
         <p>表示中 {problems.length} 問</p>
-        <small>Phase5: 設定・ショートカット・スニペット対応</small>
+        <small>Phase6: 品質改善・最適化対応</small>
       </div>
     </div>
   );

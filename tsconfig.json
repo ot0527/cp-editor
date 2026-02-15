@@ -23,5 +23,6 @@
     "src/preload/**/*.ts",
     "src/renderer/src/**/*.ts",
     "src/renderer/src/**/*.tsx"
-  ]
+  ],
+  "exclude": ["src/**/*.test.ts"]
 }
