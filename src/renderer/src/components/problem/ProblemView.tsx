@@ -1,35 +1,116 @@
+import { useMemo } from 'react';
+import DOMPurify from 'dompurify';
+import type { ProblemDetail, ProblemIndexItem } from '../../../../shared/types/problem';
+
+type ProblemViewProps = {
+  problem: ProblemIndexItem | null;
+  detail: ProblemDetail | null;
+  isLoading: boolean;
+  errorMessage: string | null;
+  onOpenExternal: (url: string) => void;
+  onRetry: () => Promise<void>;
+};
+
 /**
- * 選択中問題の本文、入出力例、補助情報を表示する。
+ * 問題文HTMLをDOMPurifyでサニタイズする。
  *
- * @returns {JSX.Element} 問題表示パネル要素を返す。
+ * @param {string} html サニタイズ対象HTML。
+ * @returns {string} 安全化されたHTML。
  */
-function ProblemView() {
+function sanitizeProblemHtml(html: string): string {
+  return DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true },
+  });
+}
+
+/**
+ * 選択中問題の本文・サンプルを表示する。
+ *
+ * @param {ProblemViewProps} props 表示対象データとイベントハンドラ。
+ * @returns {JSX.Element} 問題表示パネル要素。
+ */
+function ProblemView({ problem, detail, isLoading, errorMessage, onOpenExternal, onRetry }: ProblemViewProps) {
+  const sanitizedSections = useMemo(
+    () => detail?.sections.map((section) => ({ ...section, html: sanitizeProblemHtml(section.html) })) ?? [],
+    [detail]
+  );
+
+  if (!problem) {
+    return (
+      <article className="problem-body">
+        <p className="empty-note">問題を選択すると、ここに問題文が表示されます。</p>
+      </article>
+    );
+  }
+
   return (
     <article className="problem-body">
       <div className="problem-header">
         <div>
           <p className="section-label">問題プレビュー</p>
-          <h2 className="panel-title">ABC086A - Product</h2>
+          <h2 className="panel-title">
+            {problem.id} - {problem.title}
+          </h2>
         </div>
         <div className="tag-row">
-          <span className="tag">難易度: 灰</span>
-          <span className="tag">想定: 5分</span>
+          <span className="tag">カテゴリ: {problem.category}</span>
+          <span className="tag">難易度: {problem.difficulty ?? '不明'}</span>
         </div>
       </div>
-      <p>
-        整数 <code>a</code> と <code>b</code> が与えられます。<code>a * b</code> が偶数か奇数かを判定してください。
-      </p>
-      <h4 className="sub-title">入力</h4>
-      <pre className="code-block">a b</pre>
-      <h4 className="sub-title">出力</h4>
-      <pre className="code-block">Even または Odd</pre>
-      <h4 className="sub-title">入力例 1</h4>
-      <pre className="code-block">3 4</pre>
-      <h4 className="sub-title">出力例 1</h4>
-      <pre className="code-block">Even</pre>
-      <button className="ghost-button" type="button">
-        AtCoderで開く
-      </button>
+
+      <div className="problem-actions">
+        <button
+          className="ghost-button"
+          type="button"
+          onClick={() => {
+            if (detail?.url) {
+              onOpenExternal(detail.url);
+            }
+          }}
+          disabled={!detail?.url}
+        >
+          AtCoderで開く
+        </button>
+        <button className="ghost-button" type="button" onClick={() => void onRetry()}>
+          再読み込み
+        </button>
+      </div>
+
+      {isLoading ? <p className="empty-note">問題文を取得中...</p> : null}
+
+      {!isLoading && errorMessage ? (
+        <div className="error-box">
+          <p>問題文の取得に失敗しました。</p>
+          <small>{errorMessage}</small>
+        </div>
+      ) : null}
+
+      {!isLoading && !errorMessage && detail ? (
+        <>
+          {sanitizedSections.map((section, index) => (
+            <section key={`${detail.problemId}-${section.heading}-${index}`} className="problem-section">
+              <h4 className="sub-title">{section.heading}</h4>
+              <div className="problem-html" dangerouslySetInnerHTML={{ __html: section.html }} />
+            </section>
+          ))}
+
+          {detail.samples.length > 0 ? (
+            <section className="problem-section">
+              <h4 className="sub-title">サンプルケース</h4>
+              <div className="sample-grid">
+                {detail.samples.map((sample) => (
+                  <div key={`${detail.problemId}-sample-${sample.index}`} className="sample-card">
+                    <p className="sample-title">入力例 {sample.index}</p>
+                    <pre className="code-block">{sample.input || '(empty)'}</pre>
+                    <p className="sample-title">出力例 {sample.index}</p>
+                    <pre className="code-block">{sample.output || '(empty)'}</pre>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </>
+      ) : null}
     </article>
   );
 }

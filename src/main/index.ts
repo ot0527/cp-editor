@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from 'electron';
 import { join } from 'node:path';
+import { registerApiIpcHandlers } from './ipc/api';
 
 /**
  * メインウィンドウを生成し、開発時はViteサーバー、ビルド時は静的HTMLを読み込む。
@@ -54,6 +55,7 @@ function handleAllWindowsClosed(): void {
 }
 
 app.whenReady().then(() => {
+  registerApiIpcHandlers();
   createMainWindow();
   app.on('activate', handleAppActivate);
 });
