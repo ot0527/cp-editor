@@ -1,8 +1,16 @@
 type TitleBarProps = {
+  /** 現在選択されているテーマ。 */
   theme: 'light' | 'dark';
+  /** ユーザーがテーマ切替ボタンを押したときの処理。 */
   onToggleTheme: () => void;
 };
 
+/**
+ * Dropbox風の上部ヘッダーを描画する。
+ *
+ * @param {TitleBarProps} props 表示テーマとテーマ切替ハンドラ。
+ * @returns {JSX.Element} タイトルバー要素を返す。
+ */
 function TitleBar({ theme, onToggleTheme }: TitleBarProps) {
   return (
     <header className="title-bar">

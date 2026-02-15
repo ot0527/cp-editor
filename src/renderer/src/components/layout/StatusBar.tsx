@@ -1,7 +1,14 @@
 type StatusBarProps = {
+  /** 現在選択されているテーマ。 */
   theme: 'light' | 'dark';
 };
 
+/**
+ * エディタ下部に現在の実行環境情報を表示する。
+ *
+ * @param {StatusBarProps} props 表示テーマ情報。
+ * @returns {JSX.Element} ステータスバー要素を返す。
+ */
 function StatusBar({ theme }: StatusBarProps) {
   const version = window.cpeditor?.version ?? 'dev';
 

@@ -6,6 +6,11 @@ import BottomPanel from '../test/BottomPanel';
 import StatusBar from './StatusBar';
 import TitleBar from './TitleBar';
 
+/**
+ * 画面全体のレイアウトを構成し、テーマ状態を管理する。
+ *
+ * @returns {JSX.Element} アプリケーションのメインレイアウトを返す。
+ */
 function MainLayout() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
@@ -13,9 +18,18 @@ function MainLayout() {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
+  /**
+   * 現在のテーマをライト/ダークで切り替える。
+   *
+   * @returns {void} 値は返さない。
+   */
+  function handleToggleTheme(): void {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  }
+
   return (
     <div className="app-shell">
-      <TitleBar theme={theme} onToggleTheme={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))} />
+      <TitleBar theme={theme} onToggleTheme={handleToggleTheme} />
       <div className="content-row">
         <aside className="sidebar">
           <Sidebar />

@@ -1,3 +1,8 @@
+/**
+ * 選択中問題の本文、入出力例、補助情報を表示する。
+ *
+ * @returns {JSX.Element} 問題表示パネル要素を返す。
+ */
 function ProblemView() {
   return (
     <article className="problem-body">

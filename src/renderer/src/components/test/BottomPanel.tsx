@@ -4,6 +4,11 @@ const sampleResults = [
   { caseName: 'ケース 3（サンプル 3）', verdict: 'AC', time: '15ms', detail: '' },
 ];
 
+/**
+ * 下部タブ領域のうち、テスト結果の一覧パネルを表示する。
+ *
+ * @returns {JSX.Element} テスト結果パネル要素を返す。
+ */
 function BottomPanel() {
   return (
     <section className="bottom-panel">

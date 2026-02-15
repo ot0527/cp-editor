@@ -17,6 +17,11 @@ const categories = [
   '文字列',
 ];
 
+/**
+ * 問題カテゴリとクイックアクセスを表示するサイドバー。
+ *
+ * @returns {JSX.Element} サイドバー要素を返す。
+ */
 function Sidebar() {
   return (
     <div className="sidebar-body">
