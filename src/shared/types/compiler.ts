@@ -66,3 +66,16 @@ export interface RunCustomInputResult {
   compile: CompileResult;
   result: CustomRunResult | null;
 }
+
+/** ソース整形リクエスト。 */
+export interface FormatSourceParams {
+  sourceCode: string;
+}
+
+/** ソース整形レスポンス。 */
+export interface FormatSourceResult {
+  success: boolean;
+  formattedCode: string;
+  errorMessage: string;
+  stderr: string;
+}

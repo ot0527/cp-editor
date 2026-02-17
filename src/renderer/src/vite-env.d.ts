@@ -2,6 +2,8 @@
 import type { FetchProblemDetailParams, ProblemDetail, ProblemIndexItem } from '../../shared/types/problem';
 import type { FetchSubmissionsParams, SubmissionItem } from '../../shared/types/submission';
 import type {
+  FormatSourceParams,
+  FormatSourceResult,
   RunCustomInputParams,
   RunCustomInputResult,
   RunSampleTestsParams,
@@ -24,6 +26,7 @@ declare global {
       compiler: {
         runSampleTests: (params: RunSampleTestsParams) => Promise<RunSampleTestsResult>;
         runCustomInput: (params: RunCustomInputParams) => Promise<RunCustomInputResult>;
+        formatSource: (params: FormatSourceParams) => Promise<FormatSourceResult>;
       };
       app: {
         openExternal: (url: string) => Promise<boolean>;

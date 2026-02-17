@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isValidShortcutBinding, normalizeShortcutBinding } from './shortcut';
+import { DEFAULT_SHORTCUT_BINDINGS, SHORTCUT_DEFINITIONS, isValidShortcutBinding, normalizeShortcutBinding } from './shortcut';
 
 describe('normalizeShortcutBinding', () => {
   it('normalizes aliases and key case', () => {
@@ -24,5 +24,12 @@ describe('isValidShortcutBinding', () => {
     expect(isValidShortcutBinding('Meta+F12')).toBe(true);
     expect(isValidShortcutBinding('F5')).toBe(false);
     expect(isValidShortcutBinding('Shift')).toBe(false);
+  });
+});
+
+describe('shortcut definitions', () => {
+  it('provides default shortcut for format action', () => {
+    expect(DEFAULT_SHORTCUT_BINDINGS.formatCode).toBe('Ctrl+S');
+    expect(SHORTCUT_DEFINITIONS.some((definition) => definition.action === 'formatCode')).toBe(true);
   });
 });

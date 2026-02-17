@@ -53,4 +53,5 @@ npm run typecheck
 - 初回読み込み時は AtCoder Problems API から問題一覧を取得します（ネットワーク接続が必要）。
 - 問題文は問題選択時に AtCoder から取得し、ローカルキャッシュを再利用します。
 - 実行には `g++` がPATH上に存在する必要があります。
+- コード整形機能（`Ctrl+S`）を使うには `clang-format` がPATH上に存在する必要があります。
 - Vimモードを有効にする場合は `monaco-vim` を依存に追加してください。

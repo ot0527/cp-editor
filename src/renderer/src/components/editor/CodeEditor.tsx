@@ -90,6 +90,7 @@ function CodeEditor({
   const vimModeControllerRef = useRef<VimModeController | null>(null);
   const vimStatusRef = useRef<HTMLDivElement | null>(null);
   const [isEditorReady, setIsEditorReady] = useState(false);
+  const [isFormatting, setIsFormatting] = useState(false);
   const [vimModeErrorMessage, setVimModeErrorMessage] = useState<string | null>(null);
 
   const options = useMemo(
@@ -162,6 +163,60 @@ function CodeEditor({
     editor.focus();
   }, [code, quickSnippet, setCode]);
 
+  /**
+   * 現在のソースコードを整形し、エディタへ反映する。
+   *
+   * @returns {Promise<void>} 値は返さない。
+   */
+  const formatCode = useCallback(async (): Promise<void> => {
+    if (isFormatting) {
+      return;
+    }
+
+    const initialModel = editorRef.current?.getModel() ?? null;
+    const sourceCode = initialModel?.getValue() ?? code;
+    const sourceVersionId = initialModel?.getVersionId() ?? null;
+    setIsFormatting(true);
+
+    try {
+      const response = await window.cpeditor.compiler.formatSource({
+        sourceCode,
+      });
+      if (!response.success) {
+        console.warn(`[cpeditor] ${response.errorMessage}`);
+        return;
+      }
+
+      const editor = editorRef.current;
+      if (!editor) {
+        setCode(response.formattedCode);
+        return;
+      }
+
+      const model = editor.getModel();
+      if (sourceVersionId != null && model && model.getVersionId() !== sourceVersionId) {
+        return;
+      }
+
+      if (!model || model.getValue() === response.formattedCode) {
+        return;
+      }
+
+      editor.pushUndoStop();
+      editor.executeEdits('cpeditor.formatCode', [
+        {
+          range: model.getFullModelRange(),
+          text: response.formattedCode,
+          forceMoveMarkers: true,
+        },
+      ]);
+      editor.pushUndoStop();
+      editor.focus();
+    } finally {
+      setIsFormatting(false);
+    }
+  }, [code, isFormatting, setCode]);
+
   useEffect(() => {
     /**
      * 設定済みショートカットを評価して対応アクションを実行する。
@@ -183,6 +238,12 @@ function CodeEditor({
       if (matchesShortcut(event, shortcuts.insertSnippet)) {
         event.preventDefault();
         insertQuickSnippet();
+        return;
+      }
+
+      if (matchesShortcut(event, shortcuts.formatCode)) {
+        event.preventDefault();
+        void formatCode();
         return;
       }
 
@@ -208,7 +269,7 @@ function CodeEditor({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [insertQuickSnippet, onRunSampleTests, onTimerPause, onTimerReset, onTimerStart, shortcuts]);
+  }, [formatCode, insertQuickSnippet, onRunSampleTests, onTimerPause, onTimerReset, onTimerStart, shortcuts]);
 
   useEffect(() => {
     let cancelled = false;
@@ -285,6 +346,9 @@ function CodeEditor({
         <div className="editor-toolbar-actions">
           <button type="button" className="ghost-button" onClick={insertQuickSnippet}>
             スニペット挿入 ({shortcuts.insertSnippet})
+          </button>
+          <button type="button" className="ghost-button" onClick={() => void formatCode()} disabled={isFormatting}>
+            {isFormatting ? '整形中...' : `整形 (${shortcuts.formatCode})`}
           </button>
           <button type="button" className="primary-button" onClick={onRunSampleTests} disabled={isRunningTests}>
             {isRunningTests ? '実行中...' : `実行 (${shortcuts.runSampleTests})`}

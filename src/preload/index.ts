@@ -2,6 +2,8 @@ import { contextBridge, ipcRenderer } from 'electron';
 import type { FetchProblemDetailParams, ProblemDetail, ProblemIndexItem } from '../shared/types/problem';
 import type { FetchSubmissionsParams, SubmissionItem } from '../shared/types/submission';
 import type {
+  FormatSourceParams,
+  FormatSourceResult,
   RunCustomInputParams,
   RunCustomInputResult,
   RunSampleTestsParams,
@@ -59,6 +61,14 @@ function exposeBridgeApi(): void {
        */
       runCustomInput: (params: RunCustomInputParams) =>
         ipcRenderer.invoke('compiler:run-custom-input', params) as Promise<RunCustomInputResult>,
+      /**
+       * C++ソースコードを整形する。
+       *
+       * @param {FormatSourceParams} params 整形パラメータ。
+       * @returns {Promise<FormatSourceResult>} 整形結果。
+       */
+      formatSource: (params: FormatSourceParams) =>
+        ipcRenderer.invoke('compiler:format-source', params) as Promise<FormatSourceResult>,
     },
     app: {
       /**

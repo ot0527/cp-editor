@@ -1,4 +1,4 @@
-export type ShortcutAction = 'runSampleTests' | 'insertSnippet' | 'timerStart' | 'timerPause' | 'timerReset';
+export type ShortcutAction = 'runSampleTests' | 'insertSnippet' | 'formatCode' | 'timerStart' | 'timerPause' | 'timerReset';
 
 export type ShortcutBindingMap = Record<ShortcutAction, string>;
 
@@ -70,6 +70,11 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
     description: '設定画面で定義したクイックスニペットを現在カーソルへ挿入します。',
   },
   {
+    action: 'formatCode',
+    label: 'コード整形',
+    description: '現在のC++ソースコードを clang-format で整形します。',
+  },
+  {
     action: 'timerStart',
     label: 'タイマー開始',
     description: '学習タイマーを開始します。',
@@ -89,6 +94,7 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
 export const DEFAULT_SHORTCUT_BINDINGS: ShortcutBindingMap = {
   runSampleTests: 'Ctrl+Enter',
   insertSnippet: 'Ctrl+I',
+  formatCode: 'Ctrl+S',
   timerStart: 'Ctrl+Shift+S',
   timerPause: 'Ctrl+Shift+P',
   timerReset: 'Ctrl+Shift+R',

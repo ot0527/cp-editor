@@ -3,6 +3,8 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type {
+  FormatSourceParams,
+  FormatSourceResult,
   CompileResult,
   RunCustomInputParams,
   RunCustomInputResult,
@@ -17,6 +19,8 @@ const DEFAULT_TIMEOUT_MS = 5000;
 const COMPILE_TIMEOUT_MS = 15000;
 const DEFAULT_COMPILER_PATH = 'g++';
 const DEFAULT_COMPILER_FLAGS = ['-std=c++17', '-O2', '-Wall', '-Wextra'];
+const DEFAULT_FORMATTER_PATH = 'clang-format';
+const FORMAT_TIMEOUT_MS = 5000;
 
 interface ProcessRunOptions {
   cwd?: string;
@@ -157,6 +161,28 @@ function toCompileErrorMessage(result: ProcessRunResult): string {
 }
 
 /**
+ * 整形失敗時の表示用メッセージを生成する。
+ *
+ * @param {ProcessRunResult} result 整形実行結果。
+ * @returns {string} 表示用メッセージ。
+ */
+function toFormatErrorMessage(result: ProcessRunResult): string {
+  if (result.timedOut) {
+    return `Formatting timed out (${FORMAT_TIMEOUT_MS}ms)`;
+  }
+
+  if (result.errorMessage) {
+    return result.errorMessage;
+  }
+
+  if (result.stderr.trim()) {
+    return result.stderr.trim();
+  }
+
+  return 'Formatting failed.';
+}
+
+/**
  * 文字列を出力比較用に正規化する。
  *
  * @param {string} value 出力文字列。
@@ -164,6 +190,27 @@ function toCompileErrorMessage(result: ProcessRunResult): string {
  */
 function normalizeOutput(value: string): string {
   return value.replace(/\r\n/g, '\n').trimEnd();
+}
+
+/**
+ * ソースコードを clang-format で整形する。
+ *
+ * @param {FormatSourceParams} params 整形リクエスト。
+ * @returns {Promise<FormatSourceResult>} 整形結果。
+ */
+export async function formatSource(params: FormatSourceParams): Promise<FormatSourceResult> {
+  const result = await runProcess(DEFAULT_FORMATTER_PATH, ['--assume-filename=main.cpp'], {
+    stdin: params.sourceCode,
+    timeoutMs: FORMAT_TIMEOUT_MS,
+  });
+
+  const success = !result.timedOut && !result.errorMessage && result.exitCode === 0;
+  return {
+    success,
+    formattedCode: success ? result.stdout : params.sourceCode,
+    errorMessage: success ? '' : toFormatErrorMessage(result),
+    stderr: result.stderr,
+  };
 }
 
 /**
