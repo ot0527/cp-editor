@@ -6,31 +6,27 @@ import {
   type ShortcutAction,
   type ShortcutBindingMap,
 } from '../utils/shortcut';
+import { DEFAULT_EDITOR_THEME_ID, isEditorThemeId, type EditorThemeId } from '../themes/editorThemes';
 
 const SETTINGS_STORAGE_KEY = 'cpeditor.settings.v1';
 const MIN_EDITOR_FONT_SIZE = 10;
 const MAX_EDITOR_FONT_SIZE = 32;
 
-const DEFAULT_QUICK_SNIPPET = [
-  'for (int i = 0; i < n; ++i) {',
-  '    ',
-  '}',
-].join('\n');
-
 interface PersistedSettings {
+  editorThemeId: EditorThemeId;
   editorFontSize: number;
   lineNumbersEnabled: boolean;
   minimapEnabled: boolean;
   wordWrapEnabled: boolean;
   vimModeEnabled: boolean;
   problemTemplate: string;
-  quickSnippet: string;
   shortcuts: ShortcutBindingMap;
 }
 
 interface SettingsStoreState extends PersistedSettings {}
 
 interface SettingsStoreActions {
+  setEditorThemeId: (themeId: EditorThemeId) => void;
   setEditorFontSize: (fontSize: number) => void;
   setLineNumbersEnabled: (enabled: boolean) => void;
   setMinimapEnabled: (enabled: boolean) => void;
@@ -38,8 +34,6 @@ interface SettingsStoreActions {
   setVimModeEnabled: (enabled: boolean) => void;
   setProblemTemplate: (template: string) => void;
   resetProblemTemplate: () => void;
-  setQuickSnippet: (snippet: string) => void;
-  resetQuickSnippet: () => void;
   setShortcutBinding: (action: ShortcutAction, shortcut: string) => void;
   resetShortcutBinding: (action: ShortcutAction) => void;
   resetAllSettings: () => void;
@@ -54,13 +48,13 @@ type SettingsStore = SettingsStoreState & SettingsStoreActions;
  */
 function createDefaultSettings(): PersistedSettings {
   return {
+    editorThemeId: DEFAULT_EDITOR_THEME_ID,
     editorFontSize: 14,
     lineNumbersEnabled: true,
     minimapEnabled: true,
     wordWrapEnabled: false,
     vimModeEnabled: false,
     problemTemplate: defaultTemplate,
-    quickSnippet: DEFAULT_QUICK_SNIPPET,
     shortcuts: { ...DEFAULT_SHORTCUT_BINDINGS },
   };
 }
@@ -92,6 +86,16 @@ function toSafeText(value: unknown, fallback: string): string {
   }
 
   return value.replace(/\r\n/g, '\n');
+}
+
+/**
+ * テーマIDを既定値つきで正規化する。
+ *
+ * @param {unknown} value 値候補。
+ * @returns {EditorThemeId} 正規化済みテーマID。
+ */
+function toSafeEditorThemeId(value: unknown): EditorThemeId {
+  return isEditorThemeId(value) ? value : DEFAULT_EDITOR_THEME_ID;
 }
 
 /**
@@ -132,13 +136,13 @@ function toSafeShortcuts(rawShortcuts: unknown): ShortcutBindingMap {
  */
 function toPersistedSettings(state: SettingsStoreState): PersistedSettings {
   return {
+    editorThemeId: state.editorThemeId,
     editorFontSize: state.editorFontSize,
     lineNumbersEnabled: state.lineNumbersEnabled,
     minimapEnabled: state.minimapEnabled,
     wordWrapEnabled: state.wordWrapEnabled,
     vimModeEnabled: state.vimModeEnabled,
     problemTemplate: state.problemTemplate,
-    quickSnippet: state.quickSnippet,
     shortcuts: state.shortcuts,
   };
 }
@@ -159,13 +163,13 @@ function loadSettings(): PersistedSettings {
 
     const parsed = JSON.parse(raw) as Partial<PersistedSettings>;
     return {
+      editorThemeId: toSafeEditorThemeId(parsed.editorThemeId),
       editorFontSize: toSafeFontSize(parsed.editorFontSize ?? defaults.editorFontSize),
       lineNumbersEnabled: parsed.lineNumbersEnabled !== false,
       minimapEnabled: parsed.minimapEnabled !== false,
       wordWrapEnabled: parsed.wordWrapEnabled === true,
       vimModeEnabled: parsed.vimModeEnabled === true,
       problemTemplate: toSafeText(parsed.problemTemplate, defaults.problemTemplate),
-      quickSnippet: toSafeText(parsed.quickSnippet, defaults.quickSnippet),
       shortcuts: toSafeShortcuts(parsed.shortcuts),
     };
   } catch {
@@ -194,6 +198,17 @@ const initialSettings = loadSettings();
  */
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
   ...initialSettings,
+
+  /**
+   * エディタテーマを更新する。
+   *
+   * @param {EditorThemeId} themeId テーマID。
+   * @returns {void} 値は返さない。
+   */
+  setEditorThemeId: (themeId: EditorThemeId): void => {
+    set({ editorThemeId: themeId });
+    saveSettings(toPersistedSettings(get()));
+  },
 
   /**
    * エディタフォントサイズを更新する。
@@ -269,27 +284,6 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
    */
   resetProblemTemplate: (): void => {
     set({ problemTemplate: defaultTemplate });
-    saveSettings(toPersistedSettings(get()));
-  },
-
-  /**
-   * クイックスニペット本文を更新する。
-   *
-   * @param {string} snippet スニペット本文。
-   * @returns {void} 値は返さない。
-   */
-  setQuickSnippet: (snippet: string): void => {
-    set({ quickSnippet: toSafeText(snippet, DEFAULT_QUICK_SNIPPET) });
-    saveSettings(toPersistedSettings(get()));
-  },
-
-  /**
-   * クイックスニペットを初期値に戻す。
-   *
-   * @returns {void} 値は返さない。
-   */
-  resetQuickSnippet: (): void => {
-    set({ quickSnippet: DEFAULT_QUICK_SNIPPET });
     saveSettings(toPersistedSettings(get()));
   },
 

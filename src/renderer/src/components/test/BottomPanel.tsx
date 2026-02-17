@@ -1,15 +1,11 @@
 import { useMemo } from 'react';
 import type { TestCaseResult } from '../../../../shared/types/compiler';
-import type { ProblemSample } from '../../../../shared/types/problem';
 import { useTestStore } from '../../stores/testStore';
 import ComplexityChecker from '../tools/ComplexityChecker';
-import SubmissionHistory from '../tools/SubmissionHistory';
 
 type BottomPanelProps = {
   /** 現在エディタに表示されているC++コード。 */
   sourceCode: string;
-  /** 選択中問題のサンプルケース配列。 */
-  samples: ProblemSample[];
 };
 
 interface DiffLine {
@@ -67,12 +63,11 @@ function createResultSummary(results: TestCaseResult[]): string {
 /**
  * 下部タブ領域のうち、テスト結果の一覧パネルを表示する。
  *
- * @param {BottomPanelProps} props エディタコードとサンプルケース。
+ * @param {BottomPanelProps} props エディタコード。
  * @returns {JSX.Element} テスト結果パネル要素を返す。
  */
-function BottomPanel({ sourceCode, samples }: BottomPanelProps) {
+function BottomPanel({ sourceCode }: BottomPanelProps) {
   const activeTab = useTestStore((state) => state.activeTab);
-  const isRunningTests = useTestStore((state) => state.isRunningTests);
   const isRunningCustomInput = useTestStore((state) => state.isRunningCustomInput);
   const compileErrorMessage = useTestStore((state) => state.compileErrorMessage);
   const testResults = useTestStore((state) => state.testResults);
@@ -81,25 +76,8 @@ function BottomPanel({ sourceCode, samples }: BottomPanelProps) {
   const setActiveTab = useTestStore((state) => state.setActiveTab);
   const setCustomInput = useTestStore((state) => state.setCustomInput);
   const clearCustomResult = useTestStore((state) => state.clearCustomResult);
-  const runSampleTests = useTestStore((state) => state.runSampleTests);
   const runCustomInput = useTestStore((state) => state.runCustomInput);
   const resultSummary = useMemo(() => createResultSummary(testResults), [testResults]);
-
-  /**
-   * 現在タブに応じたプライマリ実行処理を起動する。
-   *
-   * @returns {void} 値は返さない。
-   */
-  function handleRunPrimary(): void {
-    if (activeTab === 'results') {
-      void runSampleTests(sourceCode, samples);
-      return;
-    }
-
-    if (activeTab === 'custom') {
-      void runCustomInput(sourceCode);
-    }
-  }
 
   /**
    * カスタム入出力欄を初期化する。
@@ -111,18 +89,14 @@ function BottomPanel({ sourceCode, samples }: BottomPanelProps) {
     clearCustomResult();
   }
 
-  const isPrimaryDisabled =
-    activeTab === 'results' ? isRunningTests : activeTab === 'custom' ? isRunningCustomInput : false;
-
-  const primaryLabel =
-    activeTab === 'results'
-      ? isRunningTests
-        ? '実行中...'
-        : 'すべて実行'
-      : isRunningCustomInput
-      ? '実行中...'
-      : '実行';
-  const showPrimaryAction = activeTab === 'results' || activeTab === 'custom';
+  /**
+   * カスタム入力で実行する。
+   *
+   * @returns {void} 値は返さない。
+   */
+  function handleRunCustomInput(): void {
+    void runCustomInput(sourceCode);
+  }
 
   return (
     <section className="bottom-panel">
@@ -133,7 +107,7 @@ function BottomPanel({ sourceCode, samples }: BottomPanelProps) {
             type="button"
             onClick={() => setActiveTab('results')}
           >
-            テスト結果
+            テスト結果 {testResults.length > 0 ? `(${testResults.length})` : ''}
           </button>
           <button className={`tab${activeTab === 'custom' ? ' active' : ''}`} type="button" onClick={() => setActiveTab('custom')}>
             入出力
@@ -145,19 +119,7 @@ function BottomPanel({ sourceCode, samples }: BottomPanelProps) {
           >
             計算量
           </button>
-          <button
-            className={`tab${activeTab === 'submissions' ? ' active' : ''}`}
-            type="button"
-            onClick={() => setActiveTab('submissions')}
-          >
-            提出履歴
-          </button>
         </div>
-        {showPrimaryAction ? (
-          <button className="primary-button" type="button" onClick={handleRunPrimary} disabled={isPrimaryDisabled}>
-            {primaryLabel}
-          </button>
-        ) : null}
       </header>
 
       {activeTab === 'results' ? (
@@ -171,7 +133,7 @@ function BottomPanel({ sourceCode, samples }: BottomPanelProps) {
             ) : null}
 
             {!compileErrorMessage && testResults.length === 0 ? (
-              <p className="empty-note">実行結果はまだありません。上部の「すべて実行」を押してください。</p>
+              <p className="empty-note">実行結果はまだありません。エディタ上部の「実行」を押してください。</p>
             ) : null}
 
             {testResults.map((result) => (
@@ -240,7 +202,10 @@ function BottomPanel({ sourceCode, samples }: BottomPanelProps) {
 
           <div className="custom-io-toolbar">
             <button className="ghost-button" type="button" onClick={handleClearCustomInput}>
-              Clear
+              クリア
+            </button>
+            <button className="primary-button" type="button" onClick={handleRunCustomInput} disabled={isRunningCustomInput}>
+              {isRunningCustomInput ? '実行中...' : '実行'}
             </button>
             {customResult ? (
               <>
@@ -268,10 +233,6 @@ function BottomPanel({ sourceCode, samples }: BottomPanelProps) {
 
       {activeTab === 'complexity' ? (
         <ComplexityChecker />
-      ) : null}
-
-      {activeTab === 'submissions' ? (
-        <SubmissionHistory />
       ) : null}
     </section>
   );

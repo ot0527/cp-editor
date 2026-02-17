@@ -4,11 +4,12 @@ import * as monaco from 'monaco-editor';
 import type { editor as MonacoEditorNamespace } from 'monaco-editor';
 import { useEditorStore } from '../../stores/editorStore';
 import { useSettingsStore } from '../../stores/settingsStore';
+import { getMonacoThemeName, registerVSCodeStandardThemes, type EditorThemeId } from '../../themes/editorThemes';
 import { matchesShortcut } from '../../utils/shortcut';
 
 type CodeEditorProps = {
   /** Monacoに適用するテーマ。 */
-  theme: 'light' | 'dark';
+  editorThemeId: EditorThemeId;
   /** 現在選択中の問題ID。 */
   problemId?: string;
   /** 現在選択中の問題タイトル。 */
@@ -36,6 +37,7 @@ interface MonacoVimModule {
 const MONACO_VIM_MODULE_NAME = 'monaco-vim';
 
 loader.config({ monaco });
+registerVSCodeStandardThemes(monaco.editor);
 
 /**
  * フォーム入力中など、グローバルショートカットを無視するべき対象か判定する。
@@ -67,7 +69,7 @@ function shouldIgnoreShortcutTarget(target: EventTarget | null): boolean {
  * @returns {JSX.Element} コードエディタパネル要素を返す。
  */
 function CodeEditor({
-  theme,
+  editorThemeId,
   problemId,
   problemTitle,
   onRunSampleTests,
@@ -84,7 +86,6 @@ function CodeEditor({
   const minimapEnabled = useSettingsStore((state) => state.minimapEnabled);
   const wordWrapEnabled = useSettingsStore((state) => state.wordWrapEnabled);
   const vimModeEnabled = useSettingsStore((state) => state.vimModeEnabled);
-  const quickSnippet = useSettingsStore((state) => state.quickSnippet);
   const shortcuts = useSettingsStore((state) => state.shortcuts);
   const editorRef = useRef<MonacoEditorNamespace.IStandaloneCodeEditor | null>(null);
   const vimModeControllerRef = useRef<VimModeController | null>(null);
@@ -128,40 +129,6 @@ function CodeEditor({
       vimStatusRef.current.textContent = '';
     }
   }, []);
-
-  /**
-   * クイックスニペットを現在カーソル位置へ挿入する。
-   *
-   * @returns {void} 値は返さない。
-   */
-  const insertQuickSnippet = useCallback((): void => {
-    const normalizedSnippet = quickSnippet.replace(/\r\n/g, '\n');
-    if (!normalizedSnippet.trim()) {
-      return;
-    }
-
-    const snippetText = normalizedSnippet.endsWith('\n') ? normalizedSnippet : `${normalizedSnippet}\n`;
-    const editor = editorRef.current;
-    if (!editor) {
-      const prefix = code.length === 0 || code.endsWith('\n') ? code : `${code}\n`;
-      setCode(`${prefix}${snippetText}`);
-      return;
-    }
-
-    const selection = editor.getSelection();
-    if (!selection) {
-      return;
-    }
-
-    editor.executeEdits('cpeditor.insertSnippet', [
-      {
-        range: selection,
-        text: snippetText,
-        forceMoveMarkers: true,
-      },
-    ]);
-    editor.focus();
-  }, [code, quickSnippet, setCode]);
 
   /**
    * 現在のソースコードを整形し、エディタへ反映する。
@@ -235,12 +202,6 @@ function CodeEditor({
         return;
       }
 
-      if (matchesShortcut(event, shortcuts.insertSnippet)) {
-        event.preventDefault();
-        insertQuickSnippet();
-        return;
-      }
-
       if (matchesShortcut(event, shortcuts.formatCode)) {
         event.preventDefault();
         void formatCode();
@@ -269,7 +230,7 @@ function CodeEditor({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [formatCode, insertQuickSnippet, onRunSampleTests, onTimerPause, onTimerReset, onTimerStart, shortcuts]);
+  }, [formatCode, onRunSampleTests, onTimerPause, onTimerReset, onTimerStart, shortcuts]);
 
   useEffect(() => {
     let cancelled = false;
@@ -341,17 +302,17 @@ function CodeEditor({
       <div className="editor-toolbar">
         <div className="editor-file">
           <span className="file-dot" />
-          <span>{problemId ? `${problemId}.cpp` : 'solution.cpp'}</span>
+          <div className="editor-file-meta">
+            <span className="editor-file-name">{problemId ? `${problemId}.cpp` : 'solution.cpp'}</span>
+            <small className="editor-file-sub">C++17 / UTF-8</small>
+          </div>
         </div>
         <div className="editor-toolbar-actions">
-          <button type="button" className="ghost-button" onClick={insertQuickSnippet}>
-            スニペット挿入 ({shortcuts.insertSnippet})
-          </button>
           <button type="button" className="ghost-button" onClick={() => void formatCode()} disabled={isFormatting}>
-            {isFormatting ? '整形中...' : `整形 (${shortcuts.formatCode})`}
+            {isFormatting ? '整形中...' : '整形'}
           </button>
           <button type="button" className="primary-button" onClick={onRunSampleTests} disabled={isRunningTests}>
-            {isRunningTests ? '実行中...' : `実行 (${shortcuts.runSampleTests})`}
+            {isRunningTests ? '実行中...' : '実行'}
           </button>
         </div>
       </div>
@@ -369,7 +330,7 @@ function CodeEditor({
         <Editor
           height="100%"
           defaultLanguage="cpp"
-          theme={theme === 'dark' ? 'vs-dark' : 'vs'}
+          theme={getMonacoThemeName(editorThemeId)}
           value={code}
           onMount={handleEditorMount}
           onChange={handleEditorChange}

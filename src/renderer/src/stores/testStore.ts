@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import type { CustomRunResult, RunSampleTestCase, TestCaseResult } from '../../../shared/types/compiler';
 import type { ProblemSample } from '../../../shared/types/problem';
+import { useComplexityStore } from './complexityStore';
 
-type BottomTab = 'results' | 'custom' | 'complexity' | 'submissions';
+type BottomTab = 'results' | 'custom' | 'complexity';
 
 interface TestStoreState {
   activeTab: BottomTab;
@@ -104,6 +105,8 @@ export const useTestStore = create<TestStore>((set, get) => ({
    * @returns {Promise<void>} 値は返さない。
    */
   runSampleTests: async (sourceCode: string, samples: ProblemSample[]): Promise<void> => {
+    useComplexityStore.getState().analyzeSourceCode(sourceCode);
+
     if (!samples.length) {
       set({
         compileErrorMessage: 'サンプルケースが見つかりません。問題文を読み込んでください。',
@@ -155,6 +158,8 @@ export const useTestStore = create<TestStore>((set, get) => ({
    * @returns {Promise<void>} 値は返さない。
    */
   runCustomInput: async (sourceCode: string): Promise<void> => {
+    useComplexityStore.getState().analyzeSourceCode(sourceCode);
+
     const input = get().customInput;
 
     set({

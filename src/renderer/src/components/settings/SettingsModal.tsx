@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
 import { useSettingsStore } from '../../stores/settingsStore';
 import {
   SHORTCUT_DEFINITIONS,
   shortcutFromKeyboardEvent,
   type ShortcutAction,
 } from '../../utils/shortcut';
+import { VSCODE_STANDARD_THEME_OPTIONS, isEditorThemeId } from '../../themes/editorThemes';
 
 type SettingsModalProps = {
   /** モーダル表示状態。 */
@@ -20,14 +21,15 @@ type SettingsModalProps = {
  * @returns {JSX.Element | null} モーダル要素。非表示時はnull。
  */
 function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+  const editorThemeId = useSettingsStore((state) => state.editorThemeId);
   const editorFontSize = useSettingsStore((state) => state.editorFontSize);
   const lineNumbersEnabled = useSettingsStore((state) => state.lineNumbersEnabled);
   const minimapEnabled = useSettingsStore((state) => state.minimapEnabled);
   const wordWrapEnabled = useSettingsStore((state) => state.wordWrapEnabled);
   const vimModeEnabled = useSettingsStore((state) => state.vimModeEnabled);
   const problemTemplate = useSettingsStore((state) => state.problemTemplate);
-  const quickSnippet = useSettingsStore((state) => state.quickSnippet);
   const shortcuts = useSettingsStore((state) => state.shortcuts);
+  const setEditorThemeId = useSettingsStore((state) => state.setEditorThemeId);
   const setEditorFontSize = useSettingsStore((state) => state.setEditorFontSize);
   const setLineNumbersEnabled = useSettingsStore((state) => state.setLineNumbersEnabled);
   const setMinimapEnabled = useSettingsStore((state) => state.setMinimapEnabled);
@@ -35,8 +37,6 @@ function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const setVimModeEnabled = useSettingsStore((state) => state.setVimModeEnabled);
   const setProblemTemplate = useSettingsStore((state) => state.setProblemTemplate);
   const resetProblemTemplate = useSettingsStore((state) => state.resetProblemTemplate);
-  const setQuickSnippet = useSettingsStore((state) => state.setQuickSnippet);
-  const resetQuickSnippet = useSettingsStore((state) => state.resetQuickSnippet);
   const setShortcutBinding = useSettingsStore((state) => state.setShortcutBinding);
   const resetShortcutBinding = useSettingsStore((state) => state.resetShortcutBinding);
   const resetAllSettings = useSettingsStore((state) => state.resetAllSettings);
@@ -124,6 +124,21 @@ function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     onClose();
   }
 
+  /**
+   * テーマ選択コンボボックスの変更を設定へ反映する。
+   *
+   * @param {ChangeEvent<HTMLSelectElement>} event セレクト変更イベント。
+   * @returns {void} 値は返さない。
+   */
+  function handleEditorThemeChange(event: ChangeEvent<HTMLSelectElement>): void {
+    const nextThemeId = event.target.value;
+    if (!isEditorThemeId(nextThemeId)) {
+      return;
+    }
+
+    setEditorThemeId(nextThemeId);
+  }
+
   return (
     <div className="settings-backdrop" onClick={handleBackdropClick} role="presentation">
       <section
@@ -136,7 +151,7 @@ function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <header className="settings-header">
           <div>
             <h2 className="settings-title">設定</h2>
-            <p className="settings-subtitle">ショートカット・スニペット・Vimモードをカスタマイズできます。</p>
+            <p className="settings-subtitle">ショートカット・テンプレート・Vimモードをカスタマイズできます。</p>
           </div>
           <button type="button" className="ghost-button" onClick={onClose}>
             閉じる
@@ -147,6 +162,17 @@ function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           <section className="settings-section">
             <h3 className="settings-section-title">エディタ表示</h3>
             <div className="settings-grid">
+              <label className="settings-field">
+                <span>テーマ</span>
+                <select className="compact-input settings-select" value={editorThemeId} onChange={handleEditorThemeChange}>
+                  {VSCODE_STANDARD_THEME_OPTIONS.map((theme) => (
+                    <option key={theme.id} value={theme.id}>
+                      {theme.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
               <label className="settings-field">
                 <span>フォントサイズ</span>
                 <input
@@ -216,22 +242,7 @@ function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </section>
 
           <section className="settings-section">
-            <h3 className="settings-section-title">スニペット</h3>
-
-            <label className="settings-field vertical">
-              <span>クイックスニペット（ショートカット挿入用）</span>
-              <textarea
-                className="settings-textarea"
-                value={quickSnippet}
-                onChange={(event) => setQuickSnippet(event.target.value)}
-                spellCheck={false}
-              />
-            </label>
-            <div className="settings-inline-actions">
-              <button type="button" className="ghost-button" onClick={resetQuickSnippet}>
-                クイックスニペットを初期化
-              </button>
-            </div>
+            <h3 className="settings-section-title">テンプレート</h3>
 
             <label className="settings-field vertical">
               <span>問題選択時テンプレート</span>

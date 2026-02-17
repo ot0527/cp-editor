@@ -48,11 +48,12 @@ function ProblemView({ problem, detail, isLoading, errorMessage, onOpenExternal,
   return (
     <article className="problem-body">
       <div className="problem-header">
-        <div>
+        <div className="problem-headline">
           <p className="section-label">問題プレビュー</p>
           <h2 className="panel-title">
             {problem.id} - {problem.title}
           </h2>
+          <p className="problem-subline">実装前に制約・計算量・入出力形式を確認</p>
         </div>
         <div className="tag-row">
           <span className="tag">カテゴリ: {problem.category}</span>

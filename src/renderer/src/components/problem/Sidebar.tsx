@@ -91,17 +91,30 @@ function Sidebar({
   onRetryLoadProblems,
 }: SidebarProps) {
   const groupedProblems = useMemo(() => groupProblems(problems, searchQuery), [problems, searchQuery]);
+  const visibleProblemCount = useMemo(
+    () => groupedProblems.reduce((accumulator, group) => accumulator + group.total, 0),
+    [groupedProblems]
+  );
   const hasProblemListError = !isLoading && problems.length === 0 && Boolean(errorMessage);
 
   return (
     <div className="sidebar-body">
-      <h2 className="panel-title">問題一覧</h2>
-      <input
-        className="search-input"
-        placeholder="問題ID・問題名で検索"
-        value={searchQuery}
-        onChange={(event) => onSearchQueryChange(event.target.value)}
-      />
+      <div className="sidebar-header">
+        <h2 className="panel-title">問題一覧</h2>
+        <p className="sidebar-meta">
+          表示中 {visibleProblemCount} / 全 {problems.length}
+        </p>
+      </div>
+
+      <label className="search-label">
+        <span className="section-label">Search</span>
+        <input
+          className="search-input"
+          placeholder="問題ID・問題名で検索"
+          value={searchQuery}
+          onChange={(event) => onSearchQueryChange(event.target.value)}
+        />
+      </label>
 
       {isLoading ? <p className="empty-note">問題一覧を取得中...</p> : null}
 
@@ -167,8 +180,8 @@ function Sidebar({
       </div>
 
       <div className="storage-card">
-        <p>表示中 {problems.length} 問</p>
-        <small>Phase6: 品質改善・最適化対応</small>
+        <p>Indexed Problems</p>
+        <small>カテゴリ・難易度の2軸で高速に探索できます。</small>
       </div>
     </div>
   );

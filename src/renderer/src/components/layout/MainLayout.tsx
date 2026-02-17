@@ -10,6 +10,8 @@ import { useProblemStore } from '../../stores/problemStore';
 import { useEditorStore } from '../../stores/editorStore';
 import { useTestStore } from '../../stores/testStore';
 import { useTimerStore } from '../../stores/timerStore';
+import { useSettingsStore } from '../../stores/settingsStore';
+import { getAppThemeMode, getEditorThemeOption } from '../../themes/editorThemes';
 
 /**
  * 画面全体のレイアウトを構成し、テーマ状態を管理する。
@@ -17,7 +19,6 @@ import { useTimerStore } from '../../stores/timerStore';
  * @returns {JSX.Element} アプリケーションのメインレイアウトを返す。
  */
 function MainLayout() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const problems = useProblemStore((state) => state.problems);
   const selectedProblemId = useProblemStore((state) => state.selectedProblemId);
@@ -41,10 +42,12 @@ function MainLayout() {
   const pauseTimer = useTimerStore((state) => state.pause);
   const resetTimer = useTimerStore((state) => state.reset);
   const stopOnAcceptedIfEnabled = useTimerStore((state) => state.stopOnAcceptedIfEnabled);
+  const editorThemeId = useSettingsStore((state) => state.editorThemeId);
+  const selectedEditorTheme = useMemo(() => getEditorThemeOption(editorThemeId), [editorThemeId]);
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
+    document.documentElement.dataset.theme = getAppThemeMode(editorThemeId);
+  }, [editorThemeId]);
 
   useEffect(() => {
     void loadProblems();
@@ -84,15 +87,6 @@ function MainLayout() {
     () => problems.find((problem) => problem.id === selectedProblemId) ?? null,
     [problems, selectedProblemId]
   );
-
-  /**
-   * 現在のテーマをライト/ダークで切り替える。
-   *
-   * @returns {void} 値は返さない。
-   */
-  function handleToggleTheme(): void {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-  }
 
   /**
    * サイドバーで選択された問題IDを状態へ反映する。
@@ -143,7 +137,7 @@ function MainLayout() {
 
   return (
     <div className="app-shell">
-      <TitleBar theme={theme} onToggleTheme={handleToggleTheme} onOpenSettings={handleOpenSettings} />
+      <TitleBar onOpenSettings={handleOpenSettings} />
       <div className="content-row">
         <aside className="sidebar">
           <Sidebar
@@ -171,7 +165,7 @@ function MainLayout() {
             </section>
             <section className="panel editor-panel">
               <CodeEditor
-                theme={theme}
+                editorThemeId={editorThemeId}
                 problemId={selectedProblem?.id}
                 problemTitle={selectedProblem?.title}
                 onRunSampleTests={handleRunSampleTests}
@@ -182,11 +176,15 @@ function MainLayout() {
               />
             </section>
           </div>
-          <BottomPanel sourceCode={editorCode} samples={selectedProblemDetail?.samples ?? []} />
+          <BottomPanel sourceCode={editorCode} />
         </main>
       </div>
       <SettingsModal isOpen={isSettingsOpen} onClose={handleCloseSettings} />
-      <StatusBar theme={theme} selectedProblemId={selectedProblem?.id ?? null} problemCount={problems.length} />
+      <StatusBar
+        themeLabel={selectedEditorTheme.label}
+        selectedProblemId={selectedProblem?.id ?? null}
+        problemCount={problems.length}
+      />
     </div>
   );
 }

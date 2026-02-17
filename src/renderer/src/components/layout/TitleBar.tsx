@@ -1,21 +1,17 @@
 import { formatElapsedDuration, useTimerStore } from '../../stores/timerStore';
 
 type TitleBarProps = {
-  /** 現在選択されているテーマ。 */
-  theme: 'light' | 'dark';
-  /** ユーザーがテーマ切替ボタンを押したときの処理。 */
-  onToggleTheme: () => void;
   /** 設定ボタン押下時の処理。 */
   onOpenSettings: () => void;
 };
 
 /**
- * Dropbox風の上部ヘッダーを描画する。
+ * ワークスペースの状態とタイマー操作を集約した上部ヘッダーを描画する。
  *
- * @param {TitleBarProps} props 表示テーマとテーマ切替ハンドラ。
+ * @param {TitleBarProps} props 設定モーダル起動ハンドラ。
  * @returns {JSX.Element} タイトルバー要素を返す。
  */
-function TitleBar({ theme, onToggleTheme, onOpenSettings }: TitleBarProps) {
+function TitleBar({ onOpenSettings }: TitleBarProps) {
   const isRunning = useTimerStore((state) => state.isRunning);
   const elapsedMs = useTimerStore((state) => state.elapsedMs);
   const startedAtMs = useTimerStore((state) => state.startedAtMs);
@@ -29,20 +25,24 @@ function TitleBar({ theme, onToggleTheme, onOpenSettings }: TitleBarProps) {
   const setAutoStopOnAC = useTimerStore((state) => state.setAutoStopOnAC);
 
   const currentElapsedMs = isRunning && startedAtMs != null ? elapsedMs + (tickMs - startedAtMs) : elapsedMs;
+  const timerStateLabel = isRunning ? 'RUNNING' : 'PAUSED';
 
   return (
     <header className="title-bar">
       <div className="title-left">
-        <div className="brand-mark">C</div>
+        <div className="brand-mark">CP</div>
         <div className="brand-text">
-          <strong>CPEditor</strong>
-          <small>Competitive Workspace</small>
+          <strong>cp-editor</strong>
+          <small>AtCoder Workspace</small>
         </div>
+        <span className={`session-pill${isRunning ? ' running' : ''}`}>{timerStateLabel}</span>
       </div>
       <div className="title-right">
-        <input className="global-search" placeholder="問題・ファイルを検索" />
         <div className="timer-cluster">
-          <span className="timer-readout">{formatElapsedDuration(currentElapsedMs)}</span>
+          <div className="timer-block">
+            <span className="timer-caption">Session</span>
+            <span className="timer-readout">{formatElapsedDuration(currentElapsedMs)}</span>
+          </div>
           <button type="button" className="ghost-button" onClick={isRunning ? pause : start}>
             {isRunning ? 'Pause' : 'Start'}
           </button>
@@ -62,11 +62,8 @@ function TitleBar({ theme, onToggleTheme, onOpenSettings }: TitleBarProps) {
             AutoStop AC
           </label>
         </div>
-        <button type="button" className="ghost-button settings-open-button" onClick={onOpenSettings}>
+        <button type="button" className="ghost-button settings-open-button icon-button" onClick={onOpenSettings}>
           設定
-        </button>
-        <button type="button" className="theme-toggle" onClick={onToggleTheme}>
-          {theme === 'light' ? 'ダークモード' : 'ホワイトモード'}
         </button>
         <div className="profile-chip">TG</div>
       </div>
