@@ -118,10 +118,7 @@ function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   function handleBackdropClick(): void {
     if (recordingAction) {
       setRecordingAction(null);
-      return;
     }
-
-    onClose();
   }
 
   /**
