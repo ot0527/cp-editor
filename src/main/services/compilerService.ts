@@ -44,25 +44,19 @@ interface CompileSourceResult {
   binaryPath: string | null;
 }
 
-type ToolKind = 'compiler' | 'formatter';
-
 /**
- * 配布物同梱ツールの候補パス一覧を作る。見つからない場合は PATH 上のコマンドにフォールバックする。
+ * 配布物同梱 clang-format の候補パス一覧を作る。
  *
- * @param {ToolKind} toolKind ツール種別。
  * @returns {string[]} 探索候補の絶対パス配列。
  */
-function getBundledToolCandidates(toolKind: ToolKind): string[] {
+function getBundledFormatterCandidates(): string[] {
   const isWindows = PLATFORM_NAME === 'win32';
-  const compilerName = isWindows ? 'g++.exe' : 'g++';
   const formatterName = isWindows ? 'clang-format.exe' : 'clang-format';
-  const executableName = toolKind === 'compiler' ? compilerName : formatterName;
 
   const roots = [process.resourcesPath, process.cwd()];
   const candidates = roots.flatMap((root) => [
-    join(root, 'bin', PLATFORM_NAME, executableName),
-    join(root, 'bin', executableName),
-    join(root, 'toolchain', PLATFORM_NAME, 'bin', executableName),
+    join(root, 'bin', PLATFORM_NAME, formatterName),
+    join(root, 'bin', formatterName),
   ]);
 
   // 同じ候補が重複するケースを除外する。
@@ -70,15 +64,13 @@ function getBundledToolCandidates(toolKind: ToolKind): string[] {
 }
 
 /**
- * 実行コマンドパスを解決する。同梱を優先し、なければ PATH 上の既定コマンド名を使う。
+ * 整形コマンドパスを解決する。同梱を優先し、なければ PATH 上の既定コマンド名を使う。
  *
- * @param {ToolKind} toolKind ツール種別。
  * @returns {string} 実行可能ファイルのパスまたはコマンド名。
  */
-function resolveToolCommand(toolKind: ToolKind): string {
-  const commandName = toolKind === 'compiler' ? DEFAULT_COMPILER_PATH : DEFAULT_FORMATTER_PATH;
-  const bundledPath = getBundledToolCandidates(toolKind).find((candidate) => existsSync(candidate));
-  return bundledPath ?? commandName;
+function resolveFormatterCommand(): string {
+  const bundledPath = getBundledFormatterCandidates().find((candidate) => existsSync(candidate));
+  return bundledPath ?? DEFAULT_FORMATTER_PATH;
 }
 
 /**
@@ -238,7 +230,7 @@ function normalizeOutput(value: string): string {
  * @returns {Promise<FormatSourceResult>} 整形結果。
  */
 export async function formatSource(params: FormatSourceParams): Promise<FormatSourceResult> {
-  const formatterPath = resolveToolCommand('formatter');
+  const formatterPath = resolveFormatterCommand();
   const result = await runProcess(formatterPath, ['--assume-filename=main.cpp'], {
     stdin: params.sourceCode,
     timeoutMs: FORMAT_TIMEOUT_MS,
@@ -284,12 +276,11 @@ function judgeSampleCase(testCase: RunSampleTestCase, result: ProcessRunResult):
 async function compileSource(sourceCode: string, workspaceDir: string): Promise<CompileSourceResult> {
   const sourcePath = join(workspaceDir, 'main.cpp');
   const binaryPath = join(workspaceDir, process.platform === 'win32' ? 'main.exe' : 'main.out');
-  const compilerPath = resolveToolCommand('compiler');
 
   await writeFile(sourcePath, sourceCode, 'utf8');
 
   const compileResult = await runProcess(
-    compilerPath,
+    DEFAULT_COMPILER_PATH,
     [...DEFAULT_COMPILER_FLAGS, sourcePath, '-o', binaryPath],
     { cwd: workspaceDir, timeoutMs: COMPILE_TIMEOUT_MS }
   );

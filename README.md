@@ -55,7 +55,7 @@ npm run typecheck
 - コード整形機能（`Ctrl+S`）を使うには `clang-format` がPATH上に存在する必要があります。
 - Vimモードを有効にする場合は `monaco-vim` を依存に追加してください。
 
-## Bundled Toolchain Distribution
+## Bundled Formatter Distribution
 
 To ship without requiring extra setup on user machines, place tool binaries under `resources/` before running `npm run dist`.
 
@@ -68,18 +68,8 @@ resources/
       clang-format
     darwin/
       clang-format
-  toolchain/
-    win32/
-      bin/
-        g++.exe
-    linux/
-      bin/
-        g++
-    darwin/
-      bin/
-        g++
 ```
 
-- The app first tries bundled binaries from the paths above.
-- If not found, it falls back to PATH (`clang-format` / `g++`).
-- Verify license requirements for bundled toolchains before distribution.
+- The app first tries bundled `clang-format` from the paths above.
+- If not found, it falls back to PATH (`clang-format`).
+- Verify license requirements for bundled binaries before distribution.

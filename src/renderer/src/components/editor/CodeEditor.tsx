@@ -92,6 +92,7 @@ function CodeEditor({
   const vimStatusRef = useRef<HTMLDivElement | null>(null);
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [isFormatting, setIsFormatting] = useState(false);
+  const [formatErrorMessage, setFormatErrorMessage] = useState<string | null>(null);
   const [vimModeErrorMessage, setVimModeErrorMessage] = useState<string | null>(null);
 
   const options = useMemo(
@@ -144,6 +145,7 @@ function CodeEditor({
     const sourceCode = initialModel?.getValue() ?? code;
     const sourceVersionId = initialModel?.getVersionId() ?? null;
     setIsFormatting(true);
+    setFormatErrorMessage(null);
 
     try {
       const response = await window.cpeditor.compiler.formatSource({
@@ -151,6 +153,7 @@ function CodeEditor({
       });
       if (!response.success) {
         console.warn(`[cpeditor] ${response.errorMessage}`);
+        setFormatErrorMessage(response.errorMessage || 'コード整形に失敗しました。');
         return;
       }
 
@@ -179,6 +182,7 @@ function CodeEditor({
       ]);
       editor.pushUndoStop();
       editor.focus();
+      setFormatErrorMessage(null);
     } finally {
       setIsFormatting(false);
     }
@@ -316,6 +320,12 @@ function CodeEditor({
           </button>
         </div>
       </div>
+      {formatErrorMessage ? (
+        <div className="error-box">
+          <p>整形エラー</p>
+          <small>{formatErrorMessage}</small>
+        </div>
+      ) : null}
       {vimModeEnabled ? (
         <div className="vim-status-strip">
           <span className="vim-status-label">Vim</span>

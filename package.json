@@ -50,13 +50,6 @@
         "filter": [
           "**/*"
         ]
-      },
-      {
-        "from": "resources/toolchain",
-        "to": "toolchain",
-        "filter": [
-          "**/*"
-        ]
       }
     ],
     "directories": {
